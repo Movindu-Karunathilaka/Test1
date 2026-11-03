@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="150" viewBox="0 0 240 150" role="img" aria-label="A car raised on a workshop hoist">
+<defs><radialGradient id="ilg" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#E0242B" stop-opacity=".45"/><stop offset="1" stop-color="#E0242B" stop-opacity="0"/></radialGradient></defs>
+<ellipse cx="120" cy="138" rx="100" ry="10" fill="url(#ilg)"/>
+<line x1="12" y1="138" x2="228" y2="138" stroke="#3A3A42" stroke-width="2" stroke-linecap="round"/>
+<rect x="28" y="36" width="10" height="102" rx="2" fill="#26262B" stroke="#3A3A42"/>
+<rect x="202" y="36" width="10" height="102" rx="2" fill="#26262B" stroke="#3A3A42"/>
+<rect x="24" y="132" width="18" height="6" rx="1" fill="#3A3A42"/><rect x="198" y="132" width="18" height="6" rx="1" fill="#3A3A42"/>
+<rect x="38" y="98" width="46" height="5" rx="2" fill="#E0242B"/><rect x="156" y="98" width="46" height="5" rx="2" fill="#E0242B"/>
+<path d="M50 92 L62 72 Q68 62 82 60 L148 58 Q162 58 170 68 L184 80 Q194 82 195 90 L195 96 L50 96 Z" fill="#18181B" stroke="#F4F4F5" stroke-width="2" stroke-linejoin="round"/>
+<path d="M72 71 L82 63 L116 62 L116 72 Z" fill="#2A2A31"/><path d="M122 62 L146 62 Q156 63 163 72 L122 72 Z" fill="#2A2A31"/>
+<rect x="188" y="80" width="6" height="5" rx="1" fill="#FF4A50"/>
+<circle cx="78" cy="98" r="13" fill="#0B0B0D" stroke="#F4F4F5" stroke-width="2"/><circle cx="78" cy="98" r="5" fill="none" stroke="#E0242B" stroke-width="2"/>
+<circle cx="166" cy="98" r="13" fill="#0B0B0D" stroke="#F4F4F5" stroke-width="2"/><circle cx="166" cy="98" r="5" fill="none" stroke="#E0242B" stroke-width="2"/>
+<g transform="translate(108 112) rotate(-35)"><rect x="-3" y="-2" width="34" height="6" rx="3" fill="#A1A1AA"/><circle cx="-4" cy="1" r="7" fill="none" stroke="#A1A1AA" stroke-width="4"/></g>
+<circle cx="206" cy="24" r="19" fill="#E0242B"/>
+<text x="206" y="30" text-anchor="middle" font-family="Barlow Condensed, Arial Narrow, Arial, sans-serif" font-weight="700" font-size="17" fill="#FFFFFF">+25</text>
+</svg>

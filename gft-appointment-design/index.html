@@ -1,0 +1,919 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>GFT Appointments Refresh</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,600;0,700;1,700&family=Barlow:wght@400;500;600&display=swap">
+<style>
+/* Layout: same proposal system as the Home refresh. Left = live phone mockup, right = numbered notes matching the phone's markers. */
+:root{
+  --bg:#0B0B0D; --bg-2:#111114; --panel:#18181B; --panel-2:#1F1F23; --line:#2A2A31;
+  --fg:#F4F4F5; --muted:#A1A1AA; --dim:#71717A;
+  --red:#E0242B; --red-hot:#FF4A50; --red-deep:#9E1419;
+  --amber:#F5A524; --blue:#4C8DF6; --green:#2DC66B; --grey:#8A8A93;
+  --display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+  --body:"Barlow",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --ios:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+img{max-width:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.55;
+  background-image:radial-gradient(90% 420px at 50% -120px,rgba(224,36,43,.22),transparent 70%);background-repeat:no-repeat}
+.wrap{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:48px 80px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;letter-spacing:.01em}
+h1{font-size:clamp(44px,8vw,84px);line-height:.92;font-style:italic;font-weight:700;text-transform:uppercase}
+h1 em{color:var(--red-hot);font-style:italic}
+h2{font-size:clamp(30px,4.4vw,44px);line-height:1;text-transform:uppercase;font-weight:700}
+h3{font-size:22px;line-height:1.1;font-weight:600}
+p{margin:0}
+.eyebrow{font-family:var(--body);font-weight:600;font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+.lede{font-size:19px;color:#D4D4D8;max-width:62ch}
+:focus-visible{outline:2px solid var(--red-hot);outline-offset:3px;border-radius:6px}
+header.top{display:grid;gap:20px;padding-bottom:40px;border-bottom:1px solid var(--line)}
+.brief{display:flex;flex-wrap:wrap;gap:10px;margin-top:6px}
+.brief span{border:1px solid var(--line);background:var(--bg-2);border-radius:999px;padding:6px 14px;font-size:14px;color:#D4D4D8}
+.brief b{color:var(--fg);font-weight:600}
+section{padding-top:64px;display:grid;gap:28px}
+.sec-head{display:grid;gap:10px;max-width:70ch}
+.sec-head p{color:var(--muted)}
+
+.controls{display:flex;flex-wrap:wrap;gap:18px 28px;align-items:flex-end}
+.ctl{display:grid;gap:8px}
+.ctl > span{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);font-weight:600}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{font:500 14px var(--body);color:var(--muted);background:var(--bg-2);border:1px solid var(--line);border-radius:999px;padding:7px 14px;cursor:pointer}
+.seg button[aria-pressed="true"]{color:var(--fg);border-color:var(--red);background:rgba(224,36,43,.14)}
+.seg button:hover{color:var(--fg)}
+
+.stage{display:grid;grid-template-columns:minmax(0,395px) minmax(0,1fr);gap:48px;align-items:start}
+.phone-col{position:sticky;top:calc(env(safe-area-inset-top,0px) + 16px)}
+@media (max-width:900px){.stage{grid-template-columns:minmax(0,1fr)}.phone-col{position:static;justify-self:center;width:100%;max-width:395px}}
+
+.notes{list-style:none;margin:0;padding:0;display:grid;gap:14px}
+.note{display:grid;grid-template-columns:34px minmax(0,1fr);gap:4px 14px;padding:18px 18px 18px 14px;background:var(--bg-2);border:1px solid var(--line);border-radius:16px}
+.note .num{grid-row:span 3;width:30px;height:30px;border-radius:50%;background:var(--red);color:#fff;font:700 16px var(--display);display:grid;place-items:center}
+.note h3{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.from{font-size:14px;color:var(--dim)}
+.from b{color:var(--muted);font-weight:500}
+.note p.d{color:#D4D4D8;font-size:15.5px}
+.effort{font:600 11px var(--body);letter-spacing:.12em;text-transform:uppercase;border-radius:999px;padding:3px 9px;border:1px solid}
+.e1{color:var(--green);border-color:rgba(45,198,107,.4)}
+.e2{color:var(--amber);border-color:rgba(245,165,36,.4)}
+.e3{color:var(--red-hot);border-color:rgba(255,74,80,.45)}
+.note.hl{border-color:rgba(224,36,43,.6)}
+.note .see{grid-column:2;font:600 12.5px var(--body);color:var(--red-hot);background:none;border:0;padding:0;cursor:pointer;text-align:left;justify-self:start}
+.note .see:hover{text-decoration:underline}
+
+/* ================= PHONE ================= */
+.phone{width:100%;max-width:395px;margin:0 auto;border-radius:52px;padding:10px;background:linear-gradient(145deg,#2a2a30,#121215 40%,#26262c);box-shadow:0 40px 80px -30px rgba(0,0,0,.9),0 0 0 1px #34343b}
+.screen{position:relative;border-radius:42px;overflow:hidden;font-family:var(--ios);color:#fff;-webkit-font-smoothing:antialiased;font-size:15px;line-height:1.3;min-height:812px;display:flex;flex-direction:column}
+.screen > *{position:relative;z-index:1}
+.bgfx{background-color:#0B0B0D;background-repeat:no-repeat;background-position:top center;background-size:100% auto}
+[data-bg="carbon"]{background-image:url("assets/backgrounds/bg-carbon-taillight.svg")}
+[data-bg="glow"]{background-image:url("assets/backgrounds/bg-taillight-glow.svg")}
+[data-bg="tread"]{background-image:url("assets/backgrounds/bg-tyre-tread.svg")}
+[data-bg="contour"]{background-image:url("assets/backgrounds/bg-contour-lines.svg")}
+[data-bg="streaks"]{background-image:url("assets/backgrounds/bg-speed-lines.svg")}
+
+.sb{display:flex;justify-content:space-between;align-items:center;padding:16px 30px 6px;font-weight:600;font-size:15px}
+.sb .ic{display:flex;gap:6px;align-items:center}
+.pad{padding:0 16px;flex:1}
+.ph-head{display:flex;align-items:center;justify-content:space-between;padding:10px 16px 6px;gap:8px}
+.chip-pts{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);border-radius:999px;padding:5px 11px 5px 5px;font-weight:600;font-size:14px}
+.coin{width:22px;height:22px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ff6a6f,var(--red) 55%,var(--red-deep));display:grid;place-items:center;font:700 11px var(--display);color:#fff;box-shadow:inset 0 0 0 2px rgba(255,255,255,.25)}
+.wordmark{font:italic 700 20px/1 var(--display);letter-spacing:.04em;text-transform:uppercase;text-align:center}
+.wordmark small{display:block;font:600 8.5px/1 var(--body);letter-spacing:.32em;color:#a8a8b0;margin-top:3px;font-style:normal}
+.wordmark i{color:var(--red-hot)}
+.hd-ic{display:flex;gap:6px}
+.icbtn{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);position:relative}
+.icbtn .dot{position:absolute;top:7px;right:8px;width:8px;height:8px;border-radius:50%;background:var(--red-hot);box-shadow:0 0 0 2px #0B0B0D}
+
+.blk{position:relative}
+.mk{position:absolute;left:-8px;top:-8px;width:20px;height:20px;border-radius:50%;background:var(--red);color:#fff;font:700 12px/20px var(--display);text-align:center;z-index:5;box-shadow:0 0 0 2px #0B0B0D}
+.phone.nomk .mk{display:none}
+
+.titlerow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 0 14px}
+.titlerow h4{margin:0;font-size:30px;font-weight:700;letter-spacing:-.015em}
+.bookbtn{display:flex;align-items:center;gap:6px;background:var(--red);color:#fff;font-weight:700;font-size:15px;border-radius:999px;padding:10px 16px 10px 12px;box-shadow:0 10px 22px -8px rgba(224,36,43,.8);border:0;font-family:var(--ios);cursor:pointer}
+
+.tabsw{display:grid;grid-template-columns:1fr 1fr;background:rgba(24,24,27,.95);border:1px solid #2a2a31;border-radius:14px;padding:4px;gap:4px}
+.tabsw button{border:0;background:none;color:#a1a1aa;font:600 14px var(--ios);padding:9px 0;border-radius:10px;cursor:pointer}
+.tabsw button[aria-pressed="true"]{background:#2c2c33;color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.4)}
+.tabsw .cnt{display:inline-grid;place-items:center;min-width:20px;height:20px;border-radius:10px;background:var(--red);color:#fff;font-size:11.5px;margin-left:6px;padding:0 6px}
+
+.lbl{font-size:12.5px;letter-spacing:.16em;text-transform:uppercase;color:#a1a1aa;font-weight:600;display:flex;justify-content:space-between;align-items:center;margin:20px 0 10px}
+.card{background:rgba(24,24,27,.95);border:1px solid #2a2a31;border-radius:18px;padding:14px}
+
+.live{border-color:rgba(224,36,43,.55);background:linear-gradient(180deg,rgba(224,36,43,.14),rgba(24,24,27,.96) 120px)}
+.live .top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.live .kick{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#ff8a8e;font-weight:700;display:flex;align-items:center;gap:6px}
+.pulse{width:8px;height:8px;border-radius:50%;background:var(--red-hot);box-shadow:0 0 0 0 rgba(255,74,80,.6);animation:pulse 1.8s infinite}
+@keyframes pulse{70%{box-shadow:0 0 0 8px rgba(255,74,80,0)}100%{box-shadow:0 0 0 0 rgba(255,74,80,0)}}
+.live h5{margin:4px 0 2px;font-size:20px;font-weight:700}
+.live .sub{color:#a1a1aa;font-size:13px}
+.mini-plate{background:#fff;color:#0b2a6b;border-radius:4px;padding:2px 6px 1px;font:700 13px/1.1 var(--display);letter-spacing:.06em;border:1.5px solid #0b2a6b;white-space:nowrap}
+.vt{display:grid;margin-top:14px;gap:0;position:relative}
+.vt .r{display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:10px;align-items:start;position:relative;padding-bottom:12px}
+.vt .r:last-child{padding-bottom:0}
+.vt .r::before{content:"";position:absolute;left:10px;top:20px;bottom:-2px;width:2px;background:#2e2e35}
+.vt .r:last-child::before{display:none}
+.vt .r.done::before{background:linear-gradient(#5a5a62,#5a5a62)}
+.vt i{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:#2e2e35;border:3px solid #18181b;position:relative;z-index:1}
+.vt .r.c1 i{background:var(--amber)} .vt .r.c2 i{background:var(--blue)}
+.vt .r.c3 i{background:var(--red);box-shadow:0 0 0 4px rgba(224,36,43,.25)}
+.vt .r.c4 i{background:var(--green)}
+.vt b{font-size:14px;font-weight:600;display:block}
+.vt small{color:#9a9aa3;font-size:12px}
+.vt .tm{font-size:12px;color:#a1a1aa;font-variant-numeric:tabular-nums;padding-top:3px}
+.vt .r.todo b{color:#8a8a93;font-weight:500}
+
+.photos{display:flex;gap:8px;margin-top:12px}
+.photos .ph{width:76px;height:64px;border-radius:10px;overflow:hidden;flex:none;position:relative;background:#26262b}
+.photos .ph svg{width:100%;height:100%;display:block}
+.photos .ph span{position:absolute;left:4px;bottom:4px;font-size:9.5px;font-weight:700;background:rgba(0,0,0,.7);border-radius:4px;padding:1px 4px}
+.photos .more{display:grid;place-items:center;font-weight:700;color:#d4d4d8;font-size:14px;border:1px dashed #44444c;background:transparent}
+
+.extra{margin-top:12px;border-radius:14px;background:rgba(245,165,36,.09);border:1px solid rgba(245,165,36,.45);padding:12px}
+.extra .eh{display:flex;align-items:center;gap:8px;color:var(--amber);font-weight:700;font-size:13px}
+.extra .ed{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-top:6px}
+.extra .ed b{font-size:15px}
+.extra .ed .pr{font:700 20px/1 var(--ios);font-variant-numeric:tabular-nums}
+.extra small{color:#c4c4cc;font-size:12px;display:block;margin-top:3px}
+.extra .acts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.btn{font:700 14px var(--ios);border-radius:12px;padding:10px 8px;text-align:center;cursor:pointer;border:0}
+.btn.red{background:var(--red);color:#fff}
+.btn.ghost{background:transparent;border:1px solid #44444c;color:#fff}
+.btn.green{background:var(--green);color:#06210f}
+.btn.white{background:#fff;color:#111}
+.extra.ok{background:rgba(45,198,107,.1);border-color:rgba(45,198,107,.5)}
+.extra.ok .eh{color:var(--green)}
+.extra.call{background:rgba(76,141,246,.1);border-color:rgba(76,141,246,.5)}
+.extra.call .eh{color:var(--blue)}
+
+.ready{border-color:rgba(45,198,107,.6);background:linear-gradient(180deg,rgba(45,198,107,.16),rgba(24,24,27,.96) 130px)}
+.ready .kick{color:#7fe3a6}
+.ready .sum{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.ready .sum div{background:#202024;border-radius:12px;padding:10px}
+.ready .sum small{display:block;color:#9a9aa3;font-size:11.5px}
+.ready .sum b{font-size:18px;font-variant-numeric:tabular-nums}
+.ready .acts{display:grid;grid-template-columns:1.3fr 1fr;gap:8px;margin-top:12px}
+.ready .pts{margin-top:10px;font-size:12.5px;color:#d4d4d8;display:flex;align-items:center;gap:6px}
+.ready .pts .coin{width:18px;height:18px;font-size:9px}
+.lines{margin-top:10px;display:grid;gap:4px;font-size:13px;color:#c4c4cc}
+.lines div{display:flex;justify-content:space-between;gap:8px}
+.lines div span:last-child{font-variant-numeric:tabular-nums;color:#fff}
+
+.bk{display:grid;grid-template-columns:62px minmax(0,1fr);gap:12px}
+.dt{border-radius:14px;background:#26262b;text-align:center;padding:8px 0 6px;align-self:start;overflow:hidden}
+.dt small{display:block;font-size:11px;font-weight:700;letter-spacing:.12em;color:#ff7a7e}
+.dt b{display:block;font:700 28px/1 var(--ios);margin:2px 0}
+.dt span{font-size:11px;color:#a1a1aa;text-transform:uppercase;letter-spacing:.1em}
+.bk .t{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.bk h6{margin:0;font-size:16px;font-weight:700}
+.bk .meta{color:#a1a1aa;font-size:12.5px;margin-top:3px;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center}
+.status{font-size:11.5px;font-weight:700;border-radius:999px;padding:4px 9px;white-space:nowrap;border:1px solid}
+.s-created{color:var(--amber);border-color:rgba(245,165,36,.55);background:rgba(245,165,36,.1)}
+.s-approved{color:#7fb0ff;border-color:rgba(76,141,246,.6);background:rgba(76,141,246,.12)}
+.s-progress{color:#ff6a6f;border-color:rgba(224,36,43,.6);background:rgba(224,36,43,.12)}
+.s-ready{color:#5fe08f;border-color:rgba(45,198,107,.6);background:rgba(45,198,107,.12)}
+.s-done{color:#b4b4bc;border-color:#44444c;background:rgba(255,255,255,.04)}
+.qacts{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:12px;grid-column:1 / -1}
+.qacts span{display:flex;align-items:center;justify-content:center;gap:5px;font-size:12px;font-weight:600;color:#e4e4e7;background:#202024;border-radius:10px;padding:8px 4px}
+.qacts svg{color:#ff6a6f}
+
+.due{display:flex;gap:12px;align-items:center;border-style:dashed;border-color:#3a3a42;background:rgba(24,24,27,.7)}
+.due .ico,.empty .ico{width:40px;height:40px;border-radius:12px;background:rgba(224,36,43,.14);color:#ff6a6f;display:grid;place-items:center;flex:none}
+.due .t{flex:1;min-width:0}
+.due b{display:block;font-size:14.5px}
+.due small{color:#a1a1aa;font-size:12.5px}
+.go{background:var(--red);color:#fff;font-weight:700;font-size:13px;border-radius:999px;padding:8px 12px;white-space:nowrap}
+
+.search{display:flex;align-items:center;gap:8px;background:rgba(24,24,27,.95);border:1px solid #2a2a31;border-radius:14px;padding:11px 12px;color:#8a8a93;font-size:14px}
+.fchips{display:flex;gap:6px;margin-top:10px;overflow-x:auto;scrollbar-width:none;-webkit-mask-image:linear-gradient(90deg,#000 85%,transparent);mask-image:linear-gradient(90deg,#000 85%,transparent)}
+.fchips::-webkit-scrollbar{display:none}
+.fchips span{flex:none;font-size:12.5px;font-weight:600;border-radius:999px;padding:6px 11px;border:1px solid #33333a;color:#c4c4cc}
+.fchips span.on{background:#fff;color:#111;border-color:#fff}
+.yr{display:flex;justify-content:space-between;align-items:baseline;margin:18px 0 8px}
+.yr b{font:italic 700 22px/1 var(--display)}
+.yr small{color:#a1a1aa;font-size:12px;font-variant-numeric:tabular-nums}
+.hist{display:grid;gap:8px}
+.hi{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;padding:12px 14px}
+.hi b{font-size:14.5px}
+.hi .amt{font-weight:700;font-variant-numeric:tabular-nums;text-align:right}
+.hi small{color:#9a9aa3;font-size:12px}
+.hi .pp{color:#ff8a8e;font-size:12px;text-align:right;font-weight:600}
+.hi .ha{grid-column:1 / -1;display:flex;gap:6px;margin-top:6px}
+.hi .ha span{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:600;border-radius:999px;padding:6px 10px;background:#202024;color:#e4e4e7}
+.hi .ha span.red{background:rgba(224,36,43,.15);color:#ff8a8e}
+
+.empty{text-align:center;display:grid;justify-items:center;gap:10px;padding:22px 16px 18px}
+.empty svg.illu{width:100%;max-width:250px;height:auto}
+.empty b{font-size:19px}
+.empty p{color:#a1a1aa;font-size:13.5px;max-width:30ch}
+.popular{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:4px}
+.popular span{font-size:12.5px;font-weight:600;border-radius:999px;padding:7px 11px;background:#202024;border:1px solid #33333a;color:#e4e4e7}
+.popular span small{color:#9a9aa3;font-weight:500}
+
+.tabs{display:grid;grid-template-columns:repeat(5,1fr);padding:10px 4px 26px;margin-top:24px;background:rgba(11,11,13,.92);border-top:1px solid #222227}
+.tabs div{display:grid;justify-items:center;gap:4px;font-size:11px;color:#a1a1aa}
+.tabs div.on{color:var(--red-hot)}
+.homebar{position:absolute!important;bottom:8px;left:50%;transform:translateX(-50%);width:120px;height:5px;border-radius:3px;background:#fff;z-index:3!important}
+svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+svg.i.sm{width:15px;height:15px}
+svg.i.lg{width:24px;height:24px}
+
+/* ---------- status lifecycle ---------- */
+.life{display:grid;gap:12px}
+.lrow{display:grid;grid-template-columns:170px minmax(0,1.15fr) minmax(0,1fr);gap:20px;align-items:center;padding:16px 18px;background:var(--bg-2);border:1px solid var(--line);border-radius:16px;border-left-width:4px}
+@media (max-width:860px){.lrow{grid-template-columns:minmax(0,1fr);gap:12px}}
+.lrow.l1{border-left-color:var(--amber)} .lrow.l2{border-left-color:var(--blue)} .lrow.l3{border-left-color:var(--red)} .lrow.l4{border-left-color:var(--green)} .lrow.l5{border-left-color:var(--grey)}
+.lrow .nm{display:grid;gap:6px;justify-items:start}
+.lrow .nm small{color:var(--dim);font-size:13px}
+.lrow .status{font-size:13px;padding:5px 12px;font-family:var(--ios)}
+.notif{display:grid;grid-template-columns:34px minmax(0,1fr);gap:4px 10px;background:rgba(58,58,64,.55);border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:10px 12px;font-family:var(--ios);backdrop-filter:blur(10px)}
+.notif .app{grid-row:span 2;width:34px;height:34px;border-radius:9px;background:linear-gradient(145deg,#e0242b,#8f1015);display:grid;place-items:center;font:italic 700 13px/1 var(--display);color:#fff}
+.notif .nt{display:flex;justify-content:space-between;gap:8px;font-size:13.5px}
+.notif .nt b{font-weight:600}
+.notif .nt span{color:#a1a1aa;font-size:12px}
+.notif p{font-size:13.5px;color:#e4e4e7;line-height:1.35}
+.lrow .can{font-size:14.5px;color:#D4D4D8}
+.lrow .can b{display:block;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);font-weight:600;margin-bottom:2px}
+.colorfix{display:grid;grid-template-columns:auto minmax(0,1fr);gap:14px;align-items:center;border:1px solid rgba(45,198,107,.4);background:rgba(45,198,107,.06);border-radius:16px;padding:14px 18px;max-width:820px}
+.colorfix .pair{display:flex;gap:8px;align-items:center;font-family:var(--ios)}
+.colorfix p{color:#D4D4D8;font-size:15px}
+
+/* ---------- booking steps ---------- */
+.steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+@media (max-width:960px){.steps{grid-template-columns:minmax(0,1fr);max-width:420px}}
+.step{display:grid;gap:12px;align-content:start}
+.step .cap{display:flex;gap:10px;align-items:baseline}
+.step .cap b{font:700 30px/1 var(--display);color:var(--red-hot);font-style:italic}
+.step .cap span{font:600 20px/1.1 var(--display)}
+.step p{color:var(--muted);font-size:14.5px}
+.sheet{border-radius:26px 26px 18px 18px;background:#141417;border:1px solid #2a2a31;padding:10px 14px 16px;font-family:var(--ios);color:#fff;display:grid;gap:10px;min-height:330px;align-content:start;box-shadow:0 -20px 40px -20px rgba(224,36,43,.35)}
+.sheet .grab{width:38px;height:5px;border-radius:3px;background:#3a3a42;justify-self:center}
+.sheet .sh{display:flex;justify-content:space-between;align-items:center}
+.sheet .sh b{font-size:17px}
+.sheet .sh small{color:#a1a1aa;font-size:12px}
+.prog{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+.prog i{height:4px;border-radius:2px;background:#2e2e35}
+.prog i.on{background:var(--red)}
+.opt{display:flex;align-items:center;gap:10px;border:1px solid #2e2e35;border-radius:14px;padding:10px 12px;background:#1b1b1f}
+.opt.sel{border-color:var(--red);background:rgba(224,36,43,.1)}
+.opt .t{flex:1;min-width:0}
+.opt b{display:block;font-size:14px}
+.opt small{color:#9a9aa3;font-size:12px}
+.opt .rad{width:18px;height:18px;border-radius:50%;border:2px solid #55555d;flex:none}
+.opt.sel .rad{border:5px solid var(--red);background:#fff}
+.svc{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.svc div{border:1px solid #2e2e35;border-radius:12px;padding:9px 10px;background:#1b1b1f}
+.svc div.sel{border-color:var(--red);background:rgba(224,36,43,.1)}
+.svc b{display:block;font-size:13px}
+.svc small{color:#9a9aa3;font-size:11.5px}
+.days{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.days div{text-align:center;border-radius:12px;padding:6px 0;background:#1b1b1f;border:1px solid #2e2e35;font-size:11px;color:#a1a1aa}
+.days div b{display:block;font-size:17px;color:#fff}
+.days div.sel{background:var(--red);border-color:var(--red);color:#ffd6d7}
+.slots{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.slots span{text-align:center;border-radius:10px;padding:8px 0;font-size:13px;font-weight:600;background:#1b1b1f;border:1px solid #2e2e35;font-variant-numeric:tabular-nums}
+.slots span.full{color:#55555d;text-decoration:line-through;background:transparent}
+.slots span.sel{border-color:var(--red);color:#ff8a8e;background:rgba(224,36,43,.1)}
+.sheet .cta{background:var(--red);color:#fff;text-align:center;font-weight:700;border-radius:14px;padding:12px;font-size:15px}
+.sheet .note2{font-size:12px;color:#a1a1aa;text-align:center}
+
+/* ---------- phases / fixes ---------- */
+.phases{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+@media (max-width:860px){.phases{grid-template-columns:minmax(0,1fr)}}
+.phase{border:1px solid var(--line);border-radius:18px;padding:20px;background:var(--bg-2);display:grid;gap:12px;align-content:start}
+.phase .tagline{font-size:14px;color:var(--muted)}
+.phase ul{margin:0;padding-left:18px;display:grid;gap:6px;font-size:15px;color:#D4D4D8}
+.phase .needs{font-size:13.5px;color:var(--dim);border-top:1px solid var(--line);padding-top:10px}
+.phase .needs b{color:var(--muted);font-weight:600}
+.phase h3 .ph{color:var(--red-hot)}
+.two{display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:32px;align-items:start}
+@media (max-width:760px){.two{grid-template-columns:minmax(0,1fr)}}
+.skip{display:grid;gap:14px}
+.skip div{display:grid;gap:4px;padding-bottom:14px;border-bottom:1px solid var(--line)}
+.skip b{font-family:var(--display);font-size:21px;font-weight:600}
+.skip span{color:#D4D4D8;font-size:15.5px;max-width:68ch}
+.skip span em{font-style:normal;color:#7fe3a6}
+figure{margin:0;display:grid;gap:8px}
+figure img{border-radius:22px;border:1px solid var(--line);width:100%;max-width:220px}
+figcaption{font-size:13px;color:var(--dim)}
+footer{margin-top:64px;padding-top:20px;border-top:1px solid var(--line);font-size:13.5px;color:var(--dim)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/></symbol>
+    <symbol id="i-calplus" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M12 13v6M9 16h6"/></symbol>
+    <symbol id="i-phone" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></symbol>
+    <symbol id="i-cardb" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h4"/></symbol>
+    <symbol id="i-spin" viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 1-15.5 6.2M3 12a9 9 0 0 1 15.5-6.2M18.5 2v4h-4M5.5 22v-4h4"/></symbol>
+    <symbol id="i-wrench" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
+    <symbol id="i-receipt" viewBox="0 0 24 24"><path d="M5 2h14v20l-3-2-2 2-2-2-2 2-2-2-3 2z"/><path d="M9 7h6M9 11h6M9 15h4"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+    <symbol id="i-again" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></symbol>
+    <symbol id="i-car" viewBox="0 0 24 24"><path d="M5 17H3v-4l2-5.5A2 2 0 0 1 6.9 6h10.2a2 2 0 0 1 1.9 1.5L21 13v4h-2M9 17h6M3 13h18"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></symbol>
+    <symbol id="i-swap" viewBox="0 0 24 24"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4"/><path d="M21 13v2a3 3 0 0 1-3 3H3"/></symbol>
+  </defs>
+</svg>
+
+<div class="wrap">
+
+<header class="top">
+  <p class="eyebrow">Garage Full Throttle · customer app · design proposal 2</p>
+  <h1>Appointments <em>refresh</em></h1>
+  <p class="lede">The same treatment as the Home refresh, applied to the Appointment tab. Today it's a search box, a row of status filters and an empty list. The new version follows each job from booking to pick-up, lets customers approve extra work without a phone call, and keeps every past service as a digital logbook. Everything shown is example data.</p>
+  <div class="brief">
+    <span><b>Goal:</b> fewer "is my car ready?" calls</span>
+    <span><b>Goal:</b> faster yes on extra work</span>
+    <span><b>Goal:</b> more repeat bookings</span>
+  </div>
+</header>
+
+<!-- ================= PROPOSED TAB ================= -->
+<section id="tab" aria-labelledby="h-tab">
+  <div class="sec-head">
+    <p class="eyebrow">01 · The new Appointment tab</p>
+    <h2 id="h-tab">Every job, from booking to pick-up</h2>
+    <p>Switch between three customers and between Upcoming and History (you can also tap the switch inside the phone). Try <b>Approve</b> on the extra-work card. The red numbers on the phone match the notes on the right.</p>
+  </div>
+
+  <div class="controls">
+    <div class="ctl"><span>Customer</span>
+      <div class="seg" id="seg-state">
+        <button type="button" id="st-workshop" data-state="workshop" aria-pressed="true">Car in the workshop</button>
+        <button type="button" id="st-ready" data-state="ready" aria-pressed="false">Ready to pick up</button>
+        <button type="button" id="st-new" data-state="new" aria-pressed="false">Brand-new sign-up</button>
+      </div>
+    </div>
+    <div class="ctl"><span>View</span>
+      <div class="seg" id="seg-view">
+        <button type="button" id="vw-up" data-view="up" aria-pressed="true">Upcoming</button>
+        <button type="button" id="vw-hist" data-view="hist" aria-pressed="false">History</button>
+      </div>
+    </div>
+    <div class="ctl"><span>Background</span>
+      <div class="seg" id="seg-bg">
+        <button type="button" id="bg-carbon" data-bg="carbon" aria-pressed="true">Carbon + tail-light</button>
+        <button type="button" id="bg-glow" data-bg="glow" aria-pressed="false">Tail-light glow</button>
+        <button type="button" id="bg-tread" data-bg="tread" aria-pressed="false">Tyre tread</button>
+        <button type="button" id="bg-contour" data-bg="contour" aria-pressed="false">Contour</button>
+        <button type="button" id="bg-streaks" data-bg="streaks" aria-pressed="false">Speed lines</button>
+      </div>
+    </div>
+    <div class="ctl"><span>Markers</span>
+      <div class="seg"><button type="button" id="mk-toggle" aria-pressed="true">Show numbers</button></div>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div class="phone-col">
+      <div class="phone" id="phone">
+        <div class="screen bgfx" id="screen" data-bg="carbon">
+          <div class="sb"><span>9:41</span>
+            <span class="ic" aria-hidden="true">
+              <svg width="18" height="11" viewBox="0 0 18 11"><rect x="0" y="7" width="3" height="4" rx="1" fill="#fff"/><rect x="5" y="5" width="3" height="6" rx="1" fill="#fff"/><rect x="10" y="2.5" width="3" height="8.5" rx="1" fill="#fff"/><rect x="15" y="0" width="3" height="11" rx="1" fill="#fff" opacity=".35"/></svg>
+              <svg width="24" height="12" viewBox="0 0 24 12"><rect x=".5" y=".5" width="20" height="11" rx="3" fill="none" stroke="#fff" opacity=".5"/><rect x="2" y="2" width="14" height="8" rx="1.6" fill="#fff"/><rect x="21.5" y="4" width="1.6" height="4" rx=".8" fill="#fff" opacity=".5"/></svg>
+            </span>
+          </div>
+
+          <!-- 1 header -->
+          <div class="ph-head blk">
+            <span class="mk" style="left:6px">1</span>
+            <div class="chip-pts"><span class="coin">P</span><span class="js-bal">120</span> pts</div>
+            <div class="wordmark">Full <i>Throttle</i><small>GARAGE</small></div>
+            <div class="hd-ic">
+              <span class="icbtn"><svg class="i" style="width:18px;height:18px"><use href="#i-bell"/></svg><span class="dot"></span></span>
+              <span class="icbtn"><svg class="i" style="width:18px;height:18px"><use href="#i-user"/></svg></span>
+            </div>
+          </div>
+
+          <div class="pad">
+            <!-- 2 title + book -->
+            <div class="titlerow blk">
+              <span class="mk">2</span>
+              <h4>Appointments</h4>
+              <button type="button" class="bookbtn" tabindex="-1"><svg class="i sm" style="stroke-width:2.6"><use href="#i-plus"/></svg>Book</button>
+            </div>
+
+            <!-- 3 switch -->
+            <div class="tabsw blk" id="tabsw">
+              <span class="mk">3</span>
+              <button type="button" data-view="up" aria-pressed="true">Upcoming<span class="cnt js-cnt">2</span></button>
+              <button type="button" data-view="hist" aria-pressed="false">History</button>
+            </div>
+
+            <!-- ======== UPCOMING ======== -->
+            <div id="v-up">
+              <!-- 4/5/6 live job -->
+              <div data-s="workshop">
+                <div class="lbl"><span>At the garage now</span></div>
+                <div class="card live blk">
+                  <span class="mk">4</span>
+                  <div class="top">
+                    <div>
+                      <div class="kick"><span class="pulse"></span>Live · today</div>
+                      <h5>Logbook service</h5>
+                      <div class="sub">2019 Ford Ranger XLT · dropped off 8:31 am</div>
+                    </div>
+                    <span class="mini-plate">1XY·2ZZ</span>
+                  </div>
+                  <div class="vt">
+                    <div class="r c1 done"><i></i><div><b>Booking received</b></div><span class="tm">Mon 4:12 pm</span></div>
+                    <div class="r c2 done"><i></i><div><b>Approved</b><small>Car checked in, keys tagged</small></div><span class="tm">8:31 am</span></div>
+                    <div class="r c3"><i></i><div><b>In progress</b><small>Service underway · 2 photos added</small></div><span class="tm">9:40 am</span></div>
+                    <div class="r todo"><i></i><div><b>Ready to pick up</b></div><span class="tm">~2:30 pm</span></div>
+                  </div>
+                  <div class="blk">
+                    <span class="mk" style="top:4px">5</span>
+                    <div class="photos">
+                      <div class="ph"><svg xmlns="http://www.w3.org/2000/svg" width="76" height="64" viewBox="0 0 76 64" role="img" aria-label="Photo placeholder: worn brake pad">
+<defs><linearGradient id="pb" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2E2E34"/><stop offset="1" stop-color="#17171A"/></linearGradient>
+<radialGradient id="pd" cx=".4" cy=".35" r=".7"><stop offset="0" stop-color="#C4C4CC"/><stop offset="1" stop-color="#5A5A62"/></radialGradient></defs>
+<rect width="76" height="64" fill="url(#pb)"/>
+<circle cx="34" cy="36" r="24" fill="url(#pd)"/>
+<g fill="#3A3A42"><circle cx="34" cy="19" r="1.6"/><circle cx="48" cy="27" r="1.6"/><circle cx="48" cy="45" r="1.6"/><circle cx="34" cy="53" r="1.6"/><circle cx="20" cy="45" r="1.6"/><circle cx="20" cy="27" r="1.6"/></g>
+<circle cx="34" cy="36" r="9" fill="#3A3A42" stroke="#26262B" stroke-width="2"/>
+<path d="M46 12 A26 26 0 0 1 62 32 L54 35 A18 18 0 0 0 42 20 Z" fill="#E0242B"/>
+<circle cx="54" cy="23" r="11" fill="none" stroke="#F5A524" stroke-width="1.6" stroke-dasharray="3 2"/>
+</svg><span>3 mm</span></div>
+                      <div class="ph"><svg xmlns="http://www.w3.org/2000/svg" width="76" height="64" viewBox="0 0 76 64" role="img" aria-label="Photo placeholder: tyre tread depth">
+<rect width="76" height="64" fill="#1E1E22"/>
+<rect x="6" y="6" width="64" height="52" rx="6" fill="#2B2B30"/>
+<g stroke="#18181B" stroke-width="3"><line x1="22" y1="6" x2="22" y2="58"/><line x1="38" y1="6" x2="38" y2="58"/><line x1="54" y1="6" x2="54" y2="58"/></g>
+<g fill="none" stroke="#3A3A42" stroke-width="3"><path d="M8 16 L14 22 L20 16"/><path d="M8 32 L14 38 L20 32"/><path d="M8 48 L14 54 L20 48"/><path d="M40 16 L46 22 L52 16"/><path d="M40 32 L46 38 L52 32"/><path d="M40 48 L46 54 L52 48"/></g>
+<rect x="31" y="14" width="14" height="36" rx="2" fill="#F5A524"/>
+<g stroke="#1A1205" stroke-width="1"><line x1="31" y1="20" x2="37" y2="20"/><line x1="31" y1="26" x2="35" y2="26"/><line x1="31" y1="32" x2="37" y2="32"/><line x1="31" y1="38" x2="35" y2="38"/><line x1="31" y1="44" x2="37" y2="44"/></g>
+</svg><span>4.5 mm</span></div>
+                      <div class="ph"><svg xmlns="http://www.w3.org/2000/svg" width="76" height="64" viewBox="0 0 76 64" role="img" aria-label="Photo placeholder: dirty air filter">
+<defs><linearGradient id="pf" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#7A6844"/><stop offset=".5" stop-color="#4A3F2B"/><stop offset="1" stop-color="#6B5A3A"/></linearGradient></defs>
+<rect width="76" height="64" fill="#1E1E22"/>
+<rect x="8" y="10" width="60" height="44" rx="3" fill="#2E2E34" stroke="#55555D" stroke-width="2"/>
+<rect x="12" y="14" width="52" height="36" fill="url(#pf)"/>
+<g stroke="#2A2318" stroke-width="1.4"><line x1="16" y1="14" x2="16" y2="50"/><line x1="21" y1="14" x2="21" y2="50"/><line x1="26" y1="14" x2="26" y2="50"/><line x1="31" y1="14" x2="31" y2="50"/><line x1="36" y1="14" x2="36" y2="50"/><line x1="41" y1="14" x2="41" y2="50"/><line x1="46" y1="14" x2="46" y2="50"/><line x1="51" y1="14" x2="51" y2="50"/><line x1="56" y1="14" x2="56" y2="50"/><line x1="61" y1="14" x2="61" y2="50"/></g>
+</svg><span>Air filter</span></div>
+                      <div class="ph more">+2</div>
+                    </div>
+                  </div>
+                  <div class="blk">
+                    <span class="mk" style="top:4px">6</span>
+                    <div class="extra" id="extra">
+                      <div class="eh"><svg class="i sm"><use href="#i-alert"/></svg>Extra work found · needs your OK</div>
+                      <div class="ed"><b>Front brake pads</b><span class="pr">$289</span></div>
+                      <small>Worn to 3 mm (replace at 3 mm). Fitted today, no extra wait.</small>
+                      <div class="acts">
+                        <button type="button" class="btn red" id="btn-approve">Approve $289</button>
+                        <button type="button" class="btn ghost" id="btn-call">Call me first</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 10 ready -->
+              <div data-s="ready" hidden>
+                <div class="lbl"><span>Ready for you</span></div>
+                <div class="card live ready blk">
+                  <span class="mk">10</span>
+                  <div class="top">
+                    <div>
+                      <div class="kick"><svg class="i sm" style="stroke-width:2.6"><use href="#i-check"/></svg>Ready to pick up</div>
+                      <h5>Your Ranger is ready</h5>
+                      <div class="sub">Logbook service + front brake pads</div>
+                    </div>
+                    <span class="mini-plate">1XY·2ZZ</span>
+                  </div>
+                  <div class="lines">
+                    <div><span>Logbook service (90,000 km)</span><span>$389.00</span></div>
+                    <div><span>Front brake pads, fitted</span><span>$289.00</span></div>
+                    <div><span>Member discount 10%</span><span>−$67.80</span></div>
+                  </div>
+                  <div class="sum">
+                    <div><small>Total to pay</small><b>$610.20</b></div>
+                    <div><small>Pick up by</small><b>5:30 pm</b></div>
+                  </div>
+                  <div class="acts">
+                    <span class="btn green">Pay now</span>
+                    <span class="btn ghost">Directions</span>
+                  </div>
+                  <div class="pts"><span class="coin">P</span>You'll earn <b>+305 pts</b> when this is paid</div>
+                </div>
+              </div>
+
+              <!-- 7 next booking -->
+              <div data-s="workshop ready">
+                <div class="lbl"><span>Coming up</span></div>
+                <div class="card blk">
+                  <span class="mk">7</span>
+                  <div class="bk">
+                    <div class="dt"><small>TUE</small><b>18</b><span>Nov</span></div>
+                    <div>
+                      <div class="t"><h6>Wheel alignment</h6><span class="status s-approved">Approved</span></div>
+                      <div class="meta"><span>8:00 am drop-off</span><span>·</span><span>2017 Toyota Corolla</span></div>
+                      <div class="meta"><svg class="i sm"><use href="#i-clock"/></svg><span>About 1 hour · from $99</span></div>
+                    </div>
+                    <div class="qacts">
+                      <span><svg class="i sm"><use href="#i-calplus"/></svg>Calendar</span>
+                      <span><svg class="i sm"><use href="#i-swap"/></svg>Reschedule</span>
+                      <span><svg class="i sm"><use href="#i-pin"/></svg>Directions</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 8 due soon -->
+              <div data-s="workshop ready">
+                <div class="lbl"><span>Due soon</span></div>
+                <div class="card due blk">
+                  <span class="mk">8</span>
+                  <span class="ico"><svg class="i"><use href="#i-wrench"/></svg></span>
+                  <div class="t"><b>Corolla logbook service</b><small>Due in about 3 weeks (60,000 km)</small></div>
+                  <span class="go">Book</span>
+                </div>
+              </div>
+
+              <!-- 11 empty -->
+              <div data-s="new" hidden>
+                <div class="card empty blk" style="margin-top:18px">
+                  <span class="mk">11</span>
+                  <svg class="illu" xmlns="http://www.w3.org/2000/svg" width="240" height="150" viewBox="0 0 240 150" role="img" aria-label="A car raised on a workshop hoist">
+<defs><radialGradient id="ilg" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#E0242B" stop-opacity=".45"/><stop offset="1" stop-color="#E0242B" stop-opacity="0"/></radialGradient></defs>
+<ellipse cx="120" cy="138" rx="100" ry="10" fill="url(#ilg)"/>
+<line x1="12" y1="138" x2="228" y2="138" stroke="#3A3A42" stroke-width="2" stroke-linecap="round"/>
+<rect x="28" y="36" width="10" height="102" rx="2" fill="#26262B" stroke="#3A3A42"/>
+<rect x="202" y="36" width="10" height="102" rx="2" fill="#26262B" stroke="#3A3A42"/>
+<rect x="24" y="132" width="18" height="6" rx="1" fill="#3A3A42"/><rect x="198" y="132" width="18" height="6" rx="1" fill="#3A3A42"/>
+<rect x="38" y="98" width="46" height="5" rx="2" fill="#E0242B"/><rect x="156" y="98" width="46" height="5" rx="2" fill="#E0242B"/>
+<path d="M50 92 L62 72 Q68 62 82 60 L148 58 Q162 58 170 68 L184 80 Q194 82 195 90 L195 96 L50 96 Z" fill="#18181B" stroke="#F4F4F5" stroke-width="2" stroke-linejoin="round"/>
+<path d="M72 71 L82 63 L116 62 L116 72 Z" fill="#2A2A31"/><path d="M122 62 L146 62 Q156 63 163 72 L122 72 Z" fill="#2A2A31"/>
+<rect x="188" y="80" width="6" height="5" rx="1" fill="#FF4A50"/>
+<circle cx="78" cy="98" r="13" fill="#0B0B0D" stroke="#F4F4F5" stroke-width="2"/><circle cx="78" cy="98" r="5" fill="none" stroke="#E0242B" stroke-width="2"/>
+<circle cx="166" cy="98" r="13" fill="#0B0B0D" stroke="#F4F4F5" stroke-width="2"/><circle cx="166" cy="98" r="5" fill="none" stroke="#E0242B" stroke-width="2"/>
+<g transform="translate(108 112) rotate(-35)"><rect x="-3" y="-2" width="34" height="6" rx="3" fill="#A1A1AA"/><circle cx="-4" cy="1" r="7" fill="none" stroke="#A1A1AA" stroke-width="4"/></g>
+<circle cx="206" cy="24" r="19" fill="#E0242B"/>
+<text x="206" y="30" text-anchor="middle" font-family="Barlow Condensed, Arial Narrow, Arial, sans-serif" font-weight="700" font-size="17" fill="#FFFFFF">+25</text>
+</svg>
+                  <b>Book your first service</b>
+                  <p>Pick a time in under a minute and earn 25 bonus points.</p>
+                  <div class="popular">
+                    <span>Logbook service <small>from $289</small></span>
+                    <span>Tyres</span>
+                    <span>Brakes</span>
+                    <span>Roadworthy (RWC)</span>
+                    <span>Air-con regas</span>
+                    <span>Battery</span>
+                  </div>
+                  <span class="go" style="margin-top:6px;padding:11px 20px;font-size:15px">Book a service</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- ======== HISTORY ======== -->
+            <div id="v-hist" hidden>
+              <div class="blk" style="margin-top:14px">
+                <span class="mk">9</span>
+                <div class="search"><svg class="i sm"><use href="#i-search"/></svg>Search by rego, service or invoice</div>
+                <div class="fchips"><span class="on">All cars</span><span>Ranger 1XY·2ZZ</span><span>Corolla 2GT·4RS</span><span>Invoices</span></div>
+              </div>
+              <div data-s="workshop ready">
+                <div class="yr"><b>2026</b><small>2 visits · $1,169 · +584 pts</small></div>
+                <div class="hist">
+                  <div class="card hi"><b>Logbook service</b><span class="amt">$389.00</span><small>14 May · Ranger · 86,760 km</small><span class="pp">+194 pts</span>
+                    <div class="ha"><span><svg class="i sm"><use href="#i-receipt"/></svg>Invoice</span><span class="red"><svg class="i sm"><use href="#i-again"/></svg>Book again</span></div></div>
+                  <div class="card hi"><b>4 tyres + alignment</b><span class="amt">$780.00</span><small>2 Feb · Corolla · 54,120 km</small><span class="pp">+390 pts</span>
+                    <div class="ha"><span><svg class="i sm"><use href="#i-receipt"/></svg>Invoice</span><span class="red"><svg class="i sm"><use href="#i-again"/></svg>Book again</span></div></div>
+                </div>
+                <div class="yr"><b>2025</b><small>2 visits · $549</small></div>
+                <div class="hist">
+                  <div class="card hi"><b>Roadworthy certificate</b><span class="amt">$180.00</span><small>9 Oct · Ranger · 79,300 km</small><span class="pp">Before points</span>
+                    <div class="ha"><span><svg class="i sm"><use href="#i-receipt"/></svg>Certificate</span></div></div>
+                  <div class="card hi"><b>Logbook service</b><span class="amt">$369.00</span><small>21 Jun · Ranger · 74,910 km</small><span class="pp">Before points</span>
+                    <div class="ha"><span><svg class="i sm"><use href="#i-receipt"/></svg>Invoice</span></div></div>
+                </div>
+              </div>
+              <div data-s="new" hidden>
+                <div class="card" style="margin-top:14px;color:#a1a1aa;font-size:14px;text-align:center;padding:22px">Your service history will build up here: every invoice, odometer reading and point earned, kept in one place.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="tabs" aria-hidden="true">
+            <div><svg class="i lg"><use href="#i-home"/></svg>Home</div>
+            <div class="on"><svg class="i lg"><use href="#i-cal"/></svg>Appointment</div>
+            <div><svg class="i lg"><use href="#i-cardb"/></svg>Membership</div>
+            <div><svg class="i lg"><use href="#i-spin"/></svg>Spin</div>
+            <div><svg class="i lg"><use href="#i-user"/></svg>Profile</div>
+          </div>
+          <span class="homebar"></span>
+        </div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li class="note"><span class="num">1</span>
+        <h3>Same header as Home <span class="effort e1">Small</span></h3>
+        <p class="from">Replaces: <b>bell + profile only, no points</b></p>
+        <p class="d">Points chip, wordmark, notifications and profile, the same on every tab. The refresh button goes; pull down to refresh instead.</p>
+      </li>
+      <li class="note"><span class="num">2</span>
+        <h3>A real Book button <span class="effort e1">Small</span></h3>
+        <p class="from">Replaces: <b>small "+ Add" outline button</b></p>
+        <p class="d">Booking is the reason this tab exists, so it gets the red primary button next to the title. "Add" also sounded like adding a record; "Book" says what happens.</p>
+      </li>
+      <li class="note"><span class="num">3</span>
+        <h3>Upcoming / History switch <span class="effort e1">Small</span></h3>
+        <p class="from">Replaces: <b>five status chips that run off the screen</b></p>
+        <p class="d">Most customers have one or two active jobs, so filtering by status adds nothing. Status moves onto each card. Search and filters move into History, where the list actually gets long.</p>
+      </li>
+      <li class="note hl"><span class="num">4</span>
+        <h3>Live job card with times <span class="effort e2">Medium</span></h3>
+        <p class="from">Upgrade of: <b>the status tracker on Home</b></p>
+        <p class="d">The job in the workshop sits at the top with a timeline: when it was booked, checked in and started, plus the expected ready time. Each step sends a push notification (see section 02).</p>
+        <button type="button" class="see" data-go="workshop">Show this state</button>
+      </li>
+      <li class="note"><span class="num">5</span>
+        <h3>Workshop photos <span class="effort e2">Medium</span></h3>
+        <p class="from">GFT addition</p>
+        <p class="d">The mechanic snaps worn parts from the admin side: brake pads, tyre tread, a dirty filter. Customers see exactly what the problem is, which builds trust and makes the next step an easy yes.</p>
+      </li>
+      <li class="note hl"><span class="num">6</span>
+        <h3>Approve extra work in the app <span class="effort e3">Large</span></h3>
+        <p class="from">GFT addition</p>
+        <p class="d">Instead of phone tag mid-job, the customer sees the part, the price and a clear choice: <b>Approve</b> or <b>Call me first</b>. Approval is timestamped on the job for the garage's records. Tap Approve in the mockup.</p>
+      </li>
+      <li class="note"><span class="num">7</span>
+        <h3>Upcoming booking card <span class="effort e1">Small</span></h3>
+        <p class="from">Replaces: <b>a plain list row</b></p>
+        <p class="d">A calendar date tile, the service, the car and the time, with three one-tap actions: add to the phone's calendar, reschedule, and directions to the garage.</p>
+      </li>
+      <li class="note"><span class="num">8</span>
+        <h3>Due-soon suggestion <span class="effort e2">Medium</span></h3>
+        <p class="from">Links to: <b>the service meter on Home</b></p>
+        <p class="d">When a car on the account is close to its next service, a dashed card suggests booking it. One tap opens the booking sheet with the car and service already filled in.</p>
+      </li>
+      <li class="note"><span class="num">9</span>
+        <h3>History as a digital logbook <span class="effort e2">Medium</span></h3>
+        <p class="from">Replaces: <b>search across all appointments</b></p>
+        <p class="d">Past jobs grouped by year with the date, car, odometer, amount and points earned, plus a yearly total. Each has its invoice and a <b>Book again</b> button. A full service history also helps when the customer sells the car.</p>
+        <button type="button" class="see" data-goview="hist">Show History</button>
+      </li>
+      <li class="note"><span class="num">10</span>
+        <h3>Ready to pick up, and pay <span class="effort e3">Large</span></h3>
+        <p class="from">Replaces: <b>a red "Ready To P…" chip</b></p>
+        <p class="d">It turns green so it reads as good news. It shows the itemised bill, pick-up deadline and points to be earned. Paying in the app (Apple Pay / card) means a faster handover at the counter. Without payment, it still works as a bill preview.</p>
+        <button type="button" class="see" data-go="ready">Show this state</button>
+      </li>
+      <li class="note"><span class="num">11</span>
+        <h3>First-booking empty state <span class="effort e1">Small</span></h3>
+        <p class="from">Replaces: <b>"No appointments for now"</b></p>
+        <p class="d">An illustration, a reward for the first booking and the garage's most popular services as shortcuts, including Roadworthy (RWC) for Victorian buyers and sellers.</p>
+        <button type="button" class="see" data-go="new">Show this state</button>
+      </li>
+    </ol>
+  </div>
+</section>
+
+<!-- ================= LIFECYCLE ================= -->
+<section id="statuses" aria-labelledby="h-life">
+  <div class="sec-head">
+    <p class="eyebrow">02 · Job statuses</p>
+    <h2 id="h-life">Five statuses, five messages</h2>
+    <p>The app already has the statuses. Each one should have its own colour, its own push notification and a clear next step for the customer.</p>
+  </div>
+  <div class="colorfix">
+    <div class="pair"><span class="status s-progress">In progress</span><span class="status s-ready">Ready to pick up</span></div>
+    <p><b>One colour fix:</b> today "In Progress" and "Ready To Pick Up" are both red. Make Ready green, so customers can tell at a glance their car is done.</p>
+  </div>
+  <div class="life">
+    <div class="lrow l1">
+      <div class="nm"><span class="status s-created">Created</span><small>Customer sent a booking</small></div>
+      <div class="notif"><span class="app">FT</span><div class="nt"><b>Booking received</b><span>now</span></div><p>Thanks Jordan. We'll confirm your Ranger's logbook service for Thu 6 Nov shortly.</p></div>
+      <p class="can"><b>Customer can</b>Change the time or cancel without calling.</p>
+    </div>
+    <div class="lrow l2">
+      <div class="nm"><span class="status s-approved">Approved</span><small>Garage confirmed the slot</small></div>
+      <div class="notif"><span class="app">FT</span><div class="nt"><b>You're booked in</b><span>2m ago</span></div><p>Thu 6 Nov, 8:30 am drop-off. Tap to add it to your calendar.</p></div>
+      <p class="can"><b>Customer can</b>Add to calendar, get directions, reschedule up to 24 hours before.</p>
+    </div>
+    <div class="lrow l3">
+      <div class="nm"><span class="status s-progress">In progress</span><small>Car is in the workshop</small></div>
+      <div class="notif"><span class="app">FT</span><div class="nt"><b>Extra work found</b><span>9:58 am</span></div><p>Front brake pads are down to 3 mm. See the photo and approve $289, or ask us to call.</p></div>
+      <p class="can"><b>Customer can</b>Follow the timeline, see photos, approve or query extra work.</p>
+    </div>
+    <div class="lrow l4">
+      <div class="nm"><span class="status s-ready">Ready to pick up</span><small>Work done, car parked</small></div>
+      <div class="notif"><span class="app">FT</span><div class="nt"><b>Your Ranger is ready</b><span>2:24 pm</span></div><p>Total $610.20. We're open until 5:30 pm. Pay in the app to skip the queue.</p></div>
+      <p class="can"><b>Customer can</b>See the itemised bill, pay, get directions.</p>
+    </div>
+    <div class="lrow l5">
+      <div class="nm"><span class="status s-done">Completed</span><small>Paid and collected</small></div>
+      <div class="notif"><span class="app">FT</span><div class="nt"><b>+305 points added</b><span>4:51 pm</span></div><p>Thanks for choosing Full Throttle. Your invoice is saved in History. How did we go?</p></div>
+      <p class="can"><b>Customer can</b>Download the invoice, rate the job, book the next service.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= BOOKING ================= -->
+<section id="booking" aria-labelledby="h-book">
+  <div class="sec-head">
+    <p class="eyebrow">03 · Booking flow</p>
+    <h2 id="h-book">Book in three taps</h2>
+    <p>The Book button opens a bottom sheet over the current screen rather than a new page. Known details are filled in, so a returning customer only picks a time.</p>
+  </div>
+  <div class="steps">
+    <div class="step">
+      <div class="cap"><b>1</b><span>Which car?</span></div>
+      <div class="sheet">
+        <span class="grab"></span>
+        <div class="sh"><b>Book a service</b><small>Step 1 of 3</small></div>
+        <div class="prog"><i class="on"></i><i></i><i></i></div>
+        <div class="opt sel"><span class="mini-plate">1XY·2ZZ</span><div class="t"><b>2019 Ford Ranger XLT</b><small>Next service in 1,240 km</small></div><span class="rad"></span></div>
+        <div class="opt"><span class="mini-plate">2GT·4RS</span><div class="t"><b>2017 Toyota Corolla</b><small>Logbook due in 3 weeks</small></div><span class="rad"></span></div>
+        <div class="opt" style="border-style:dashed"><svg class="i" style="color:#ff6a6f"><use href="#i-plus"/></svg><div class="t"><b>Add another car</b><small>Rego and model, 20 seconds</small></div></div>
+        <span class="cta">Next</span>
+      </div>
+      <p>Cars come from My garage. If there's only one car, this step is skipped.</p>
+    </div>
+    <div class="step">
+      <div class="cap"><b>2</b><span>What does it need?</span></div>
+      <div class="sheet">
+        <span class="grab"></span>
+        <div class="sh"><b>Ranger · services</b><small>Step 2 of 3</small></div>
+        <div class="prog"><i class="on"></i><i class="on"></i><i></i></div>
+        <div class="svc">
+          <div class="sel"><b>Logbook service</b><small>from $289 · 3 hr</small></div>
+          <div><b>Tyres</b><small>quote · 1 hr</small></div>
+          <div class="sel"><b>Brake check</b><small>free with service</small></div>
+          <div><b>Roadworthy (RWC)</b><small>$180 · 1.5 hr</small></div>
+          <div><b>Air-con regas</b><small>from $149</small></div>
+          <div><b>Something else</b><small>describe it</small></div>
+        </div>
+        <span class="cta">Next · from $289</span>
+      </div>
+      <p>Show prices up front where the garage has them. "Something else" takes a short note and a photo.</p>
+    </div>
+    <div class="step">
+      <div class="cap"><b>3</b><span>When suits?</span></div>
+      <div class="sheet">
+        <span class="grab"></span>
+        <div class="sh"><b>Pick a drop-off time</b><small>Step 3 of 3</small></div>
+        <div class="prog"><i class="on"></i><i class="on"></i><i class="on"></i></div>
+        <div class="days"><div>WED<b>5</b></div><div class="sel">THU<b>6</b></div><div>FRI<b>7</b></div><div>MON<b>10</b></div><div>TUE<b>11</b></div></div>
+        <div class="slots"><span class="full">7:30</span><span class="sel">8:30</span><span>9:30</span><span>10:30</span><span class="full">12:00</span><span>1:30</span></div>
+        <span class="cta">Book Thu 6 Nov, 8:30 am</span>
+        <span class="note2">+25 pts for booking in the app</span>
+      </div>
+      <p>Only real free slots are shown, so the garage's "Approved" step becomes a quick confirmation.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= FIXES ================= -->
+<section id="fixes" aria-labelledby="h-fix">
+  <div class="sec-head">
+    <p class="eyebrow">04 · What changes from today</p>
+    <h2 id="h-fix">Five problems with the current tab</h2>
+  </div>
+  <div class="two">
+    <div class="skip">
+      <div><b>Status chips run off the screen</b><span>"Ready To P…" is cut off, and nothing shows the row scrolls. Each chip is also outlined in its own colour, so they all look selected. Replaced by the Upcoming / History switch (3).</span></div>
+      <div><b>The main action is the smallest button</b><span>"+ Add" is a small outlined button in the top corner, the hardest place to reach with one thumb. Booking becomes the red primary button (2), and the Book button on Home opens the same sheet.</span></div>
+      <div><b>Two ways to refresh</b><span>There's a refresh button on the tab and another on Home. Pull to refresh is the standard on iOS and Android, and frees up the space.</span></div>
+      <div><b>In progress and Ready look the same</b><span>Both are red. Ready becomes <em>green</em> (10).</span></div>
+      <div><b>The empty screen is a dead end</b><span>"No appointments for now" gives a new customer nothing to do. It becomes a first-booking prompt with popular services (11).</span></div>
+    </div>
+    <figure>
+      <img src="assets/images/current-appointments.jpg" alt="Current Appointment tab: title, small Add button, search box with a refresh button, five coloured status chips cut off at the right edge, and an empty 'No appointments for now' card.">
+      <figcaption>Appointment tab today, for comparison.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ================= BUILD ================= -->
+<section id="build" aria-labelledby="h-build">
+  <div class="sec-head">
+    <p class="eyebrow">05 · Build order</p>
+    <h2 id="h-build">Ship it in three drops</h2>
+    <p>These can run alongside the Home phases. Phase 1 here is mostly front-end work on data the app already stores.</p>
+  </div>
+  <div class="phases">
+    <div class="phase">
+      <h3><span class="ph">Phase 1</span> · Clean-up</h3>
+      <p class="tagline">About 1–2 weeks. Existing data.</p>
+      <ul>
+        <li>Shared header, Book button (1, 2)</li>
+        <li>Upcoming / History switch (3)</li>
+        <li>New booking cards + calendar and directions (7)</li>
+        <li>Green "Ready" status, pull to refresh</li>
+        <li>First-booking empty state (11)</li>
+      </ul>
+      <p class="needs"><b>Needs:</b> a timestamp saved on each status change.</p>
+    </div>
+    <div class="phase">
+      <h3><span class="ph">Phase 2</span> · Live jobs</h3>
+      <p class="tagline">About 3 weeks. Admin + push.</p>
+      <ul>
+        <li>Live job timeline (4)</li>
+        <li>Push notification per status</li>
+        <li>3-step booking sheet with free slots</li>
+        <li>History logbook with invoices (9)</li>
+        <li>Due-soon suggestion (8)</li>
+      </ul>
+      <p class="needs"><b>Needs:</b> push notifications; workshop slot capacity per day; invoice PDF upload; odometer recorded at each job.</p>
+    </div>
+    <div class="phase">
+      <h3><span class="ph">Phase 3</span> · In-app approvals</h3>
+      <p class="tagline">About 4 weeks. New features.</p>
+      <ul>
+        <li>Workshop photos from the admin side (5)</li>
+        <li>Approve extra work in the app (6)</li>
+        <li>Itemised bill and in-app payment (10)</li>
+      </ul>
+      <p class="needs"><b>Needs:</b> photo upload in the admin; quote line items with approve / call-me responses; a payment provider such as Stripe or Square (Apple Pay and Google Pay).</p>
+    </div>
+  </div>
+</section>
+
+<footer>Prepared for Garage Full Throttle. Names, plates, prices, times and services in the mockup are examples, not real customer data or the garage's actual price list.</footer>
+</div>
+
+<script>
+(function(){
+  var screen=document.getElementById('screen'), phone=document.getElementById('phone');
+
+  function setBg(v){
+    screen.setAttribute('data-bg',v);
+    document.querySelectorAll('#seg-bg button').forEach(function(b){ b.setAttribute('aria-pressed',String(b.dataset.bg===v)); });
+  }
+  document.querySelectorAll('#seg-bg button').forEach(function(b){ b.addEventListener('click',function(){ setBg(b.dataset.bg); }); });
+
+  var mk=document.getElementById('mk-toggle');
+  mk.addEventListener('click',function(){
+    var on=mk.getAttribute('aria-pressed')!=='true';
+    mk.setAttribute('aria-pressed',String(on)); phone.classList.toggle('nomk',!on);
+  });
+
+  var state='workshop', view='up';
+  var counts={workshop:'2',ready:'2',new:''};
+  var bal={workshop:'120',ready:'120',new:'20'};
+  function render(){
+    document.querySelectorAll('[data-s]').forEach(function(e){ e.hidden = e.getAttribute('data-s').split(' ').indexOf(state)<0; });
+    document.getElementById('v-up').hidden = view!=='up';
+    document.getElementById('v-hist').hidden = view!=='hist';
+    var c=document.querySelector('.js-cnt'); c.textContent=counts[state]; c.hidden=!counts[state];
+    document.querySelector('.js-bal').textContent=bal[state];
+    document.querySelectorAll('#seg-state button').forEach(function(b){ b.setAttribute('aria-pressed',String(b.dataset.state===state)); });
+    document.querySelectorAll('#seg-view button, #tabsw button').forEach(function(b){ b.setAttribute('aria-pressed',String(b.dataset.view===view)); });
+  }
+  function scrollToPhone(){
+    var top=phone.getBoundingClientRect().top;
+    if(top<-120 || top>window.innerHeight*0.6){ phone.scrollIntoView({behavior: matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth', block:'start'}); }
+  }
+  document.querySelectorAll('#seg-state button').forEach(function(b){ b.addEventListener('click',function(){ state=b.dataset.state; render(); }); });
+  document.querySelectorAll('#seg-view button, #tabsw button').forEach(function(b){ b.addEventListener('click',function(){ view=b.dataset.view; render(); }); });
+  document.querySelectorAll('.see').forEach(function(b){ b.addEventListener('click',function(){
+    if(b.dataset.go){ state=b.dataset.go; view='up'; }
+    if(b.dataset.goview){ view=b.dataset.goview; if(state==='new') state='workshop'; }
+    render(); scrollToPhone();
+  }); });
+
+  /* extra-work approval micro-interaction */
+  var extra=document.getElementById('extra'), original=extra.innerHTML;
+  function bindExtra(){
+    var a=document.getElementById('btn-approve'), c=document.getElementById('btn-call');
+    if(a) a.addEventListener('click',function(){
+      extra.className='extra ok';
+      extra.innerHTML='<div class="eh"><svg class="i sm" style="stroke-width:2.6"><use href="#i-check"/></svg>Approved 10:02 am</div><div class="ed"><b>Front brake pads</b><span class="pr">$289</span></div><small>Added to this job. Still on track for about 2:30 pm.</small><div class="acts" style="grid-template-columns:1fr"><button type="button" class="btn ghost" id="btn-undo">Undo (demo)</button></div>';
+      document.getElementById('btn-undo').addEventListener('click',reset);
+    });
+    if(c) c.addEventListener('click',function(){
+      extra.className='extra call';
+      extra.innerHTML='<div class="eh"><svg class="i sm"><use href="#i-phone"/></svg>Call requested</div><div class="ed"><b>Front brake pads</b><span class="pr">$289</span></div><small>The workshop will ring you within 15 minutes. Nothing is fitted until you say yes.</small><div class="acts" style="grid-template-columns:1fr"><button type="button" class="btn ghost" id="btn-undo">Undo (demo)</button></div>';
+      document.getElementById('btn-undo').addEventListener('click',reset);
+    });
+  }
+  function reset(){ extra.className='extra'; extra.innerHTML=original; bindExtra(); }
+  bindExtra();
+  render();
+})();
+</script>
+
+</body>
+</html>
