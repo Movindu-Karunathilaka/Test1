@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="112" viewBox="0 0 128 112">
+<path d="M28.64 97.36 A50 50 0 1 1 99.36 97.36" stroke="#2E2E35" stroke-width="8" fill="none" stroke-linecap="round"/>
+<path d="M113.85 65.92 A50 50 0 0 1 99.36 97.36" stroke="#5A1216" stroke-width="8" fill="none" stroke-linecap="round"/>
+<path d="M28.64 97.36 A50 50 0 0 1 86.70 17.45" stroke="#E0242B" stroke-width="8" fill="none" stroke-linecap="round"/>
+<line x1="35.01" y1="90.99" x2="39.96" y2="86.04" stroke="#FF8A8E" stroke-width="2" stroke-linecap="round"/>
+<line x1="25.01" y1="74.67" x2="28.81" y2="73.43" stroke="#FF8A8E" stroke-width="1.2" stroke-linecap="round"/>
+<line x1="23.50" y1="55.59" x2="27.46" y2="56.21" stroke="#FF8A8E" stroke-width="1.2" stroke-linecap="round"/>
+<line x1="30.83" y1="37.90" x2="34.07" y2="40.25" stroke="#FF8A8E" stroke-width="1.2" stroke-linecap="round"/>
+<line x1="45.39" y1="25.47" x2="47.20" y2="29.03" stroke="#FF8A8E" stroke-width="1.2" stroke-linecap="round"/>
+<line x1="64.00" y1="21.00" x2="64.00" y2="28.00" stroke="#FF8A8E" stroke-width="2" stroke-linecap="round"/>
+<line x1="82.61" y1="25.47" x2="80.80" y2="29.03" stroke="#FF8A8E" stroke-width="1.2" stroke-linecap="round"/>
+<line x1="97.17" y1="37.90" x2="93.93" y2="40.25" stroke="#55555D" stroke-width="1.2" stroke-linecap="round"/>
+<line x1="104.50" y1="55.59" x2="100.54" y2="56.21" stroke="#55555D" stroke-width="1.2" stroke-linecap="round"/>
+<line x1="102.99" y1="74.67" x2="99.19" y2="73.43" stroke="#55555D" stroke-width="1.2" stroke-linecap="round"/>
+<line x1="92.99" y1="90.99" x2="88.04" y2="86.04" stroke="#55555D" stroke-width="2" stroke-linecap="round"/>
+<line id="needle" x1="60.82" y1="68.24" x2="80.34" y2="29.92" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round"/>
+<circle cx="64" cy="62" r="5" fill="#E0242B" stroke="#FFFFFF" stroke-width="1.5"/>
+<text x="64" y="92" text-anchor="middle" font-family="Barlow Condensed, Arial Narrow, Arial, sans-serif" font-size="15" font-weight="700" fill="#FFFFFF">120 / 200</text>
+<text x="64" y="104" text-anchor="middle" font-family="Barlow Condensed, Arial Narrow, Arial, sans-serif" font-size="9" letter-spacing="1.5" fill="#9A9AA3">NEXT REWARD</text>
+</svg>

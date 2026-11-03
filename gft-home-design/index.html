@@ -1,0 +1,757 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>GFT Home Refresh</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,600;0,700;1,700&family=Barlow:wght@400;500;600&display=swap">
+<style>
+/* Layout: proposal page in the app's own dark/red world. Left = live phone mockup, right = numbered notes that match the phone's markers. */
+:root{
+  --bg:#0B0B0D; --bg-2:#111114; --panel:#18181B; --panel-2:#1F1F23; --line:#2A2A31;
+  --fg:#F4F4F5; --muted:#A1A1AA; --dim:#71717A;
+  --red:#E0242B; --red-hot:#FF4A50; --red-deep:#9E1419;
+  --amber:#F5A524; --blue:#4C8DF6; --green:#2DC66B;
+  --display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+  --body:"Barlow",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --ios:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+img{max-width:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.55;
+  background-image:radial-gradient(90% 420px at 50% -120px,rgba(224,36,43,.22),transparent 70%);background-repeat:no-repeat}
+.wrap{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:48px 80px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;letter-spacing:.01em}
+h1{font-size:clamp(44px,8vw,84px);line-height:.92;font-style:italic;font-weight:700;text-transform:uppercase}
+h1 em{color:var(--red-hot);font-style:italic}
+h2{font-size:clamp(30px,4.4vw,44px);line-height:1;text-transform:uppercase;font-weight:700}
+h3{font-size:22px;line-height:1.1;font-weight:600}
+p{margin:0}
+.eyebrow{font-family:var(--body);font-weight:600;font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+.lede{font-size:19px;color:#D4D4D8;max-width:62ch}
+a{color:var(--red-hot)}
+:focus-visible{outline:2px solid var(--red-hot);outline-offset:3px;border-radius:6px}
+
+header.top{display:grid;gap:20px;padding-bottom:40px;border-bottom:1px solid var(--line)}
+.brief{display:flex;flex-wrap:wrap;gap:10px;margin-top:6px}
+.brief span{border:1px solid var(--line);background:var(--bg-2);border-radius:999px;padding:6px 14px;font-size:14px;color:#D4D4D8}
+.brief b{color:var(--fg);font-weight:600}
+
+section{padding-top:64px;display:grid;gap:28px}
+.sec-head{display:grid;gap:10px;max-width:70ch}
+.sec-head p{color:var(--muted)}
+
+/* ---------- controls ---------- */
+.controls{display:flex;flex-wrap:wrap;gap:18px 28px;align-items:flex-end}
+.ctl{display:grid;gap:8px}
+.ctl > span{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);font-weight:600}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{font:500 14px var(--body);color:var(--muted);background:var(--bg-2);border:1px solid var(--line);border-radius:999px;padding:7px 14px;cursor:pointer}
+.seg button[aria-pressed="true"]{color:var(--fg);border-color:var(--red);background:rgba(224,36,43,.14)}
+.seg button:hover{color:var(--fg)}
+
+/* ---------- main grid ---------- */
+.stage{display:grid;grid-template-columns:minmax(0,395px) minmax(0,1fr);gap:48px;align-items:start}
+.phone-col{position:sticky;top:calc(env(safe-area-inset-top,0px) + 16px)}
+@media (max-width:900px){.stage{grid-template-columns:minmax(0,1fr)}.phone-col{position:static;justify-self:center;width:100%;max-width:395px}}
+
+/* ---------- notes ---------- */
+.notes{list-style:none;margin:0;padding:0;display:grid;gap:14px;counter-reset:n}
+.note{display:grid;grid-template-columns:34px minmax(0,1fr);gap:4px 14px;padding:18px 18px 18px 14px;background:var(--bg-2);border:1px solid var(--line);border-radius:16px}
+.note .num{grid-row:span 3;width:30px;height:30px;border-radius:50%;background:var(--red);color:#fff;font:700 16px var(--display);display:grid;place-items:center}
+.note h3{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.from{font-size:14px;color:var(--dim)}
+.from b{color:var(--muted);font-weight:500}
+.note p.d{color:#D4D4D8;font-size:15.5px}
+.effort{font:600 11px var(--body);letter-spacing:.12em;text-transform:uppercase;border-radius:999px;padding:3px 9px;border:1px solid}
+.e1{color:var(--green);border-color:rgba(45,198,107,.4)}
+.e2{color:var(--amber);border-color:rgba(245,165,36,.4)}
+.e3{color:var(--red-hot);border-color:rgba(255,74,80,.45)}
+.note.hl{border-color:rgba(224,36,43,.6)}
+
+/* ================= PHONE ================= */
+.phone{width:100%;max-width:395px;margin:0 auto;border-radius:52px;padding:10px;background:linear-gradient(145deg,#2a2a30,#121215 40%,#26262c);box-shadow:0 40px 80px -30px rgba(0,0,0,.9),0 0 0 1px #34343b}
+.screen{position:relative;border-radius:42px;overflow:hidden;font-family:var(--ios);color:#fff;background-color:#0B0B0D;-webkit-font-smoothing:antialiased;font-size:15px;line-height:1.3}
+.screen > *{position:relative;z-index:1}
+
+/* --- background treatments: each is one SVG in assets/backgrounds, anchored to the top; it fades into #0B0B0D below --- */
+.bgfx{position:relative;isolation:isolate;background-color:#0B0B0D;background-repeat:no-repeat;background-position:top center;background-size:100% auto}
+[data-bg="carbon"]{background-image:url("assets/backgrounds/bg-carbon-taillight.svg")}
+[data-bg="glow"]{background-image:url("assets/backgrounds/bg-taillight-glow.svg")}
+[data-bg="tread"]{background-image:url("assets/backgrounds/bg-tyre-tread.svg")}
+[data-bg="contour"]{background-image:url("assets/backgrounds/bg-contour-lines.svg")}
+[data-bg="streaks"]{background-image:url("assets/backgrounds/bg-speed-lines.svg")}
+
+.sb{display:flex;justify-content:space-between;align-items:center;padding:16px 30px 6px;font-weight:600;font-size:15px}
+.sb .ic{display:flex;gap:6px;align-items:center}
+.pad{padding:0 16px}
+.ph-head{display:flex;align-items:center;justify-content:space-between;padding:10px 16px 6px;gap:8px}
+.chip-pts{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);border-radius:999px;padding:5px 11px 5px 5px;font-weight:600;font-size:14px;backdrop-filter:blur(6px)}
+.coin{width:22px;height:22px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ff6a6f,var(--red) 55%,var(--red-deep));display:grid;place-items:center;font:700 11px var(--display);color:#fff;box-shadow:inset 0 0 0 2px rgba(255,255,255,.25)}
+.wordmark{font:italic 700 20px/1 var(--display);letter-spacing:.04em;text-transform:uppercase;text-align:center}
+.wordmark small{display:block;font:600 8.5px/1 var(--body);letter-spacing:.32em;color:#a8a8b0;margin-top:3px;font-style:normal}
+.wordmark i{color:var(--red-hot)}
+.hd-ic{display:flex;gap:6px}
+.icbtn{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);position:relative}
+.icbtn .dot{position:absolute;top:7px;right:8px;width:8px;height:8px;border-radius:50%;background:var(--red-hot);box-shadow:0 0 0 2px #0B0B0D}
+
+.blk{position:relative}
+.mk{position:absolute;left:-8px;top:-8px;width:20px;height:20px;border-radius:50%;background:var(--red);color:#fff;font:700 12px/20px var(--display);text-align:center;z-index:5;box-shadow:0 0 0 2px #0B0B0D}
+.phone.nomk .mk{display:none}
+
+.welcome{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 0 12px}
+.welcome .hi{color:#ff7a7e;font-size:14px}
+.welcome .name{font-size:28px;font-weight:700;letter-spacing:-.01em;line-height:1.05}
+.club{font-size:12px;font-weight:600;border-radius:999px;padding:6px 10px;white-space:nowrap}
+.club.member{background:linear-gradient(90deg,var(--red),#b9171d);color:#fff}
+.club.join{border:1px solid rgba(224,36,43,.7);color:#ff8a8e}
+
+.strip{display:flex;align-items:center;gap:10px;background:rgba(24,24,27,.92);border:1px solid #2a2a31;border-radius:14px;padding:10px 10px 10px 12px;font-size:14px}
+.strip .ico{width:30px;height:30px;border-radius:9px;background:#26262b;display:grid;place-items:center;color:#ff6a6f;flex:none}
+.strip .t{flex:1;min-width:0}
+.strip .t small{display:block;color:#9a9aa3;font-size:12px}
+.pill{background:var(--red);color:#fff;font-weight:700;font-size:13px;border-radius:999px;padding:4px 10px;white-space:nowrap}
+.pill.amber{background:var(--amber);color:#1a1205}
+
+.car{margin-top:12px;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:10px;scrollbar-width:none;border-radius:18px}
+.car::-webkit-scrollbar{display:none}
+.slide{flex:0 0 100%;scroll-snap-align:start;height:168px;border-radius:18px;position:relative;overflow:hidden;display:grid;align-content:end;padding:16px;background:#1a1a1d center/cover no-repeat}
+.slide::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.05),rgba(0,0,0,.75))}
+.slide > *{position:relative}
+.slide .kick{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#ffb3b5;font-weight:700}
+.slide .big{font:italic 700 30px/1 var(--display);text-transform:uppercase;letter-spacing:.02em}
+.slide .sub{font-size:13px;color:#e4e4e7;margin-top:4px}
+.timer{position:absolute;top:12px;left:50%;transform:translateX(-50%);background:#fff;color:var(--red);font:italic 700 15px/1 var(--display);border-radius:999px;padding:6px 12px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.dots{display:flex;gap:5px;justify-content:center;margin-top:8px}
+.dots i{width:6px;height:6px;border-radius:50%;background:#3f3f46;transition:width .2s,background .2s}
+.dots i.on{width:18px;border-radius:3px;background:var(--red)}
+.s-promo{background-image:linear-gradient(135deg,#e0242b,#7a0d12)}
+.s-promo .num-big{position:absolute;right:-6px;top:-18px;font:italic 700 150px/1 var(--display);color:rgba(255,255,255,.1)}
+.s-club{background-image:linear-gradient(135deg,#202024,#0d0d0f)}
+.s-club .x{position:absolute;right:14px;top:14px;font:italic 700 56px/1 var(--display);color:var(--red-hot)}
+
+.qa{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:18px;text-align:center}
+.qa .b{display:grid;justify-items:center;gap:6px;font-size:12.5px;color:#d4d4d8}
+.qa .c{width:58px;height:58px;border-radius:50%;display:grid;place-items:center;background:#1c1c20;border:1px solid #2e2e35;color:#ff5a5f}
+.qa .b:first-child .c{background:var(--red);border-color:var(--red);color:#fff;box-shadow:0 8px 20px -6px rgba(224,36,43,.7)}
+
+.lbl{font-size:12.5px;letter-spacing:.16em;text-transform:uppercase;color:#a1a1aa;font-weight:600;display:flex;justify-content:space-between;align-items:center;margin:22px 0 10px}
+.lbl a{color:#ff6a6f;text-decoration:none;letter-spacing:.06em;font-size:12.5px}
+
+.card{background:rgba(24,24,27,.95);border:1px solid #2a2a31;border-radius:18px;padding:14px}
+.pts{display:grid;grid-template-columns:minmax(0,1fr) 128px;gap:6px;align-items:center}
+.pts .row{display:flex;gap:12px}
+.pts .row div{display:grid;font-size:12px;color:#9a9aa3}
+.pts .row div + div{border-left:1px solid #34343b;padding-left:12px}
+.pts .row b{color:#fff;font-size:17px;font-variant-numeric:tabular-nums}
+.pts .bal-l{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#9a9aa3;margin-top:12px}
+.pts .bal{font:700 40px/1 var(--ios);letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.pts .next{font-size:12.5px;color:#d4d4d8;margin-top:6px}
+.pts .next b{color:#ff7a7e}
+.dial text{font-family:var(--display)}
+
+.appt .top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.appt .top b{display:block;font-size:16px}
+.appt .top small{color:#9a9aa3;font-size:13px}
+.status{font-size:12px;font-weight:700;border-radius:999px;padding:4px 10px;color:#ff6a6f;border:1px solid rgba(224,36,43,.6);background:rgba(224,36,43,.12);white-space:nowrap}
+.track{display:grid;grid-template-columns:repeat(4,1fr);margin-top:16px;position:relative}
+.track::before{content:"";position:absolute;left:12.5%;right:12.5%;top:9px;height:3px;background:#2e2e35;border-radius:2px}
+.track::after{content:"";position:absolute;left:12.5%;width:50%;top:9px;height:3px;background:linear-gradient(90deg,var(--amber),var(--blue) 50%,var(--red));border-radius:2px}
+.st{display:grid;justify-items:center;gap:6px;font-size:11px;color:#9a9aa3;position:relative;z-index:1;text-align:center}
+.st i{width:21px;height:21px;border-radius:50%;background:#2e2e35;border:3px solid #18181b;display:grid;place-items:center}
+.st.c1 i{background:var(--amber)} .st.c2 i{background:var(--blue)}
+.st.c3 i{background:var(--red);box-shadow:0 0 0 4px rgba(224,36,43,.25)}
+.st.c3{color:#fff;font-weight:600}
+.appt .eta{margin-top:12px;font-size:13px;color:#d4d4d8;background:#202024;border-radius:10px;padding:8px 10px}
+
+.veh{display:grid;gap:12px}
+.veh .h{display:flex;align-items:center;gap:12px}
+.plate{background:#fff;color:#0b2a6b;border-radius:6px;padding:4px 8px 2px;font:700 17px/1 var(--display);letter-spacing:.08em;border:2px solid #0b2a6b;text-align:center;min-width:86px}
+.plate small{display:block;font:600 6.5px/1.4 var(--body);letter-spacing:.2em;color:#0b2a6b}
+.veh .h b{display:block;font-size:15.5px}
+.veh .h small{color:#9a9aa3;font-size:12.5px}
+.meter{display:grid;gap:5px;font-size:12.5px;color:#a1a1aa}
+.meter .l{display:flex;justify-content:space-between}
+.meter .l b{color:#fff;font-weight:600}
+.bar{height:6px;border-radius:3px;background:#2e2e35;overflow:hidden}
+.bar i{display:block;height:100%;border-radius:3px;background:linear-gradient(90deg,#ff6a6f,var(--red))}
+.bar.am i{background:var(--amber)}
+.addbtn{border:1px solid #3a3a42;border-radius:999px;padding:4px 10px;color:#fff;font-size:12.5px;letter-spacing:0;text-transform:none}
+
+.deals{display:flex;gap:10px;overflow-x:auto;scrollbar-width:none;margin:0 -16px;padding:0 16px;scroll-snap-type:x mandatory}
+.deals::-webkit-scrollbar{display:none}
+.deal{flex:0 0 150px;height:150px;border-radius:16px;padding:12px;display:grid;align-content:space-between;scroll-snap-align:start;position:relative;overflow:hidden}
+.deal .k{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;opacity:.8}
+.deal .v{font:italic 700 26px/0.95 var(--display);text-transform:uppercase}
+.deal .s{font-size:12px;opacity:.85}
+.d1{background:linear-gradient(160deg,#e0242b,#8f1015)}
+.d2{background:#f4f4f5;color:#111}
+.d3{background:#1c1c20;border:1px dashed #4a4a52}
+.d3 .k{color:#ff8a8e}
+
+.badges{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;text-align:center}
+.bd{display:grid;justify-items:center;gap:6px;font-size:11px;color:#a1a1aa}
+.bd .hx{width:52px;height:56px;display:grid;place-items:center;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);background:linear-gradient(160deg,#ff5a5f,#9e1419);color:#fff}
+.bd.lock .hx{background:#26262b;color:#55555d}
+.bd.lock{color:#6b6b73}
+
+.refer{display:flex;align-items:center;gap:12px;background:linear-gradient(100deg,rgba(224,36,43,.22),rgba(24,24,27,.95) 60%);border:1px solid rgba(224,36,43,.35)}
+.refer .t{flex:1;min-width:0}
+.refer b{display:block;font-size:15px}
+.refer small{color:#c4c4cc;font-size:12.5px}
+.refer .go{background:#fff;color:#111;font-weight:700;font-size:13px;border-radius:999px;padding:8px 12px;white-space:nowrap}
+
+.empty{display:flex;gap:12px;align-items:center;border-style:dashed;border-color:#3a3a42}
+.empty .t{flex:1}
+.empty b{display:block;font-size:15px}
+.empty small{color:#a1a1aa;font-size:12.5px}
+.empty .go{background:var(--red);color:#fff;font-weight:700;font-size:13px;border-radius:999px;padding:8px 12px;white-space:nowrap}
+
+.tabs{display:grid;grid-template-columns:repeat(5,1fr);padding:10px 4px 26px;margin-top:24px;background:rgba(11,11,13,.92);border-top:1px solid #222227;backdrop-filter:blur(10px)}
+.tabs div{display:grid;justify-items:center;gap:4px;font-size:11px;color:#a1a1aa}
+.tabs div.on{color:var(--red-hot)}
+.homebar{position:absolute!important;bottom:8px;left:50%;transform:translateX(-50%);width:120px;height:5px;border-radius:3px;background:#fff;z-index:3!important}
+
+svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+svg.i.lg{width:24px;height:24px}
+
+/* ---------- background tiles ---------- */
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:16px}
+.tile{display:grid;align-content:start;gap:10px;background:none;border:0;padding:0;color:inherit;text-align:left;cursor:pointer;font:inherit}
+.tile .sw{height:230px;border-radius:22px;border:1px solid var(--line);overflow:hidden;padding:16px 12px;display:grid;align-content:start;gap:8px}
+.tile .sw > *{position:relative;z-index:1}
+.tile .sw .fake-h{height:12px;width:55%;border-radius:4px;background:rgba(255,255,255,.85)}
+.tile .sw .fake-c{height:44px;border-radius:10px;background:rgba(24,24,27,.95);border:1px solid #2a2a31}
+.tile .sw .fake-c.r{background:var(--red);border-color:var(--red);height:34px}
+.tile[aria-pressed="true"] .sw{border-color:var(--red);box-shadow:0 0 0 2px var(--red)}
+.tile h3{font-size:20px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.tile p{font-size:14.5px;color:var(--muted)}
+.rec{font:600 10.5px var(--body);letter-spacing:.12em;text-transform:uppercase;color:#fff;background:var(--red);border-radius:999px;padding:3px 8px}
+.refer .ico,.empty .ico{width:40px;height:40px;border-radius:12px;background:rgba(255,255,255,.08);display:grid;place-items:center;flex:none}
+.devnote{border-left:3px solid var(--red);padding:4px 0 4px 16px;color:#D4D4D8;max-width:78ch}
+
+/* ---------- phases ---------- */
+.phases{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+@media (max-width:860px){.phases{grid-template-columns:minmax(0,1fr)}}
+.phase{border:1px solid var(--line);border-radius:18px;padding:20px;background:var(--bg-2);display:grid;gap:12px;align-content:start}
+.phase .tagline{font-size:14px;color:var(--muted)}
+.phase ul{margin:0;padding-left:18px;display:grid;gap:6px;font-size:15px;color:#D4D4D8}
+.phase .needs{font-size:13.5px;color:var(--dim);border-top:1px solid var(--line);padding-top:10px}
+.phase .needs b{color:var(--muted);font-weight:600}
+.phase h3 .ph{color:var(--red-hot)}
+
+/* ---------- skip + today ---------- */
+.two{display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:32px;align-items:start}
+@media (max-width:760px){.two{grid-template-columns:minmax(0,1fr)}}
+.skip{display:grid;gap:14px}
+.skip div{display:grid;gap:4px;padding-bottom:14px;border-bottom:1px solid var(--line)}
+.skip b{font-family:var(--display);font-size:21px;font-weight:600}
+.skip span{color:#D4D4D8;font-size:15.5px;max-width:68ch}
+figure{margin:0;display:grid;gap:8px}
+figure img{border-radius:22px;border:1px solid var(--line);width:100%;max-width:220px}
+figcaption{font-size:13px;color:var(--dim)}
+footer{margin-top:64px;padding-top:20px;border-top:1px solid var(--line);font-size:13.5px;color:var(--dim)}
+
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/></symbol>
+    <symbol id="i-phone" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></symbol>
+    <symbol id="i-tag" viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><path d="M7 7h.01"/></symbol>
+    <symbol id="i-gift" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8s1-5 4.5-5a2.5 2.5 0 0 1 0 5"/></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></symbol>
+    <symbol id="i-cardb" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h4"/></symbol>
+    <symbol id="i-spin" viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 1-15.5 6.2M3 12a9 9 0 0 1 15.5-6.2M18.5 2v4h-4M5.5 22v-4h4"/></symbol>
+    <symbol id="i-wrench" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+    <symbol id="i-car" viewBox="0 0 24 24"><path d="M5 17H3v-4l2-5.5A2 2 0 0 1 6.9 6h10.2a2 2 0 0 1 1.9 1.5L21 13v4h-2M9 17h6M3 13h18"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2M16 3.13a4 4 0 0 1 0 7.75M21 21v-2a4 4 0 0 0-3-3.85"/></symbol>
+    <symbol id="i-flag" viewBox="0 0 24 24"><path d="M4 22V4M4 4h13l-2 4 2 4H4"/></symbol>
+    <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 2 3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-chev" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+  </defs>
+</svg>
+
+<div class="wrap">
+
+<header class="top">
+  <p class="eyebrow">Garage Full Throttle · customer app · design proposal</p>
+  <h1>Home screen <em>refresh</em></h1>
+  <p class="lede">The client asked for the extra home-screen pieces they liked in LMCT+, and for a background that isn't plain black. Below is a working mockup of the new Home tab, ten recommended additions, six background options and a suggested build order. Everything shown is example data.</p>
+  <div class="brief">
+    <span><b>Ask 1:</b> LMCT+-style add-ons on Home</span>
+    <span><b>Ask 2:</b> a designed background, not flat black</span>
+    <span><b>Keep:</b> GFT red + black brand, existing tabs</span>
+  </div>
+</header>
+
+<!-- ================= PROPOSED HOME ================= -->
+<section id="home" aria-labelledby="h-home">
+  <div class="sec-head">
+    <p class="eyebrow">01 · The new Home tab</p>
+    <h2 id="h-home">What a customer sees when they open the app</h2>
+    <p>Switch between a regular customer and a brand-new sign-up, and try each background. The red numbers on the phone match the notes on the right.</p>
+  </div>
+
+  <div class="controls">
+    <div class="ctl"><span>Customer</span>
+      <div class="seg" id="seg-state">
+        <button type="button" id="st-regular" data-state="regular" aria-pressed="true">Regular customer</button>
+        <button type="button" id="st-new" data-state="new" aria-pressed="false">Brand-new sign-up</button>
+      </div>
+    </div>
+    <div class="ctl"><span>Background</span>
+      <div class="seg" id="seg-bg">
+        <button type="button" id="bg-carbon" data-bg="carbon" aria-pressed="true">Carbon + tail-light</button>
+        <button type="button" id="bg-glow" data-bg="glow" aria-pressed="false">Tail-light glow</button>
+        <button type="button" id="bg-tread" data-bg="tread" aria-pressed="false">Tyre tread</button>
+        <button type="button" id="bg-contour" data-bg="contour" aria-pressed="false">Contour lines</button>
+        <button type="button" id="bg-streaks" data-bg="streaks" aria-pressed="false">Speed lines</button>
+        <button type="button" id="bg-plain" data-bg="plain" aria-pressed="false">Plain (today)</button>
+      </div>
+    </div>
+    <div class="ctl"><span>Markers</span>
+      <div class="seg"><button type="button" id="mk-toggle" aria-pressed="true">Show numbers</button></div>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div class="phone-col">
+      <div class="phone" id="phone">
+        <div class="screen bgfx" id="screen" data-bg="carbon">
+          <div class="sb"><span>22:44</span>
+            <span class="ic" aria-hidden="true">
+              <svg width="18" height="11" viewBox="0 0 18 11"><rect x="0" y="7" width="3" height="4" rx="1" fill="#fff"/><rect x="5" y="5" width="3" height="6" rx="1" fill="#fff"/><rect x="10" y="2.5" width="3" height="8.5" rx="1" fill="#fff"/><rect x="15" y="0" width="3" height="11" rx="1" fill="#fff" opacity=".35"/></svg>
+              <svg width="24" height="12" viewBox="0 0 24 12"><rect x=".5" y=".5" width="20" height="11" rx="3" fill="none" stroke="#fff" opacity=".5"/><rect x="2" y="2" width="11" height="8" rx="1.6" fill="#fff"/><rect x="21.5" y="4" width="1.6" height="4" rx=".8" fill="#fff" opacity=".5"/></svg>
+            </span>
+          </div>
+
+          <!-- 1 header -->
+          <div class="ph-head blk">
+            <span class="mk" style="left:6px">1</span>
+            <div class="chip-pts"><span class="coin">P</span><span class="js-bal">120</span> pts</div>
+            <div class="wordmark">Full <i>Throttle</i><small>GARAGE</small></div>
+            <div class="hd-ic">
+              <span class="icbtn"><svg class="i" style="width:18px;height:18px"><use href="#i-bell"/></svg><span class="dot"></span></span>
+              <span class="icbtn"><svg class="i" style="width:18px;height:18px"><use href="#i-user"/></svg></span>
+            </div>
+          </div>
+
+          <div class="pad">
+            <!-- 2 welcome -->
+            <div class="welcome blk">
+              <span class="mk">2</span>
+              <div><div class="hi">Welcome back,</div><div class="name js-name">Jordan</div></div>
+              <span class="club member js-club">GFT Club member</span>
+            </div>
+
+            <!-- 3 reminder strip -->
+            <div class="strip blk">
+              <span class="mk">3</span>
+              <span class="ico"><svg class="i" style="width:17px;height:17px"><use href="#i-wrench"/></svg></span>
+              <span class="t js-strip-t">Next service due<small>2019 Ford Ranger · logbook service</small></span>
+              <span class="pill js-strip-p">1,240 km</span>
+            </div>
+
+            <!-- 4 carousel -->
+            <div class="blk">
+              <span class="mk">4</span>
+              <div class="car" id="car">
+                <div class="slide" style="background-image:url('assets/images/hero-neon-car.jpg')">
+                  <span class="timer" id="timer">2d 14h 05m</span>
+                  <span class="kick">Weekly spin</span>
+                  <span class="big">3 spins ready</span>
+                  <span class="sub">Win tyres, fuel and free services. Resets Monday.</span>
+                </div>
+                <div class="slide s-promo">
+                  <span class="num-big">$49</span>
+                  <span class="kick">This month</span>
+                  <span class="big">Winter safety check</span>
+                  <span class="sub">Tyres, brakes, lights and wipers. Book by 30 Nov.</span>
+                </div>
+                <div class="slide s-club">
+                  <span class="x">5×</span>
+                  <span class="kick">GFT Club</span>
+                  <span class="big">Earn 5× points</span>
+                  <span class="sub">10% off every service. $19/month, cancel anytime.</span>
+                </div>
+              </div>
+              <div class="dots" id="dots"><i class="on"></i><i></i><i></i></div>
+            </div>
+
+            <!-- 5 quick actions -->
+            <div class="qa blk">
+              <span class="mk">5</span>
+              <div class="b"><span class="c"><svg class="i lg"><use href="#i-cal"/></svg></span>Book</div>
+              <div class="b"><span class="c"><svg class="i lg"><use href="#i-phone"/></svg></span>Call us</div>
+              <div class="b"><span class="c"><svg class="i lg"><use href="#i-tag"/></svg></span>Deals</div>
+              <div class="b"><span class="c"><svg class="i lg"><use href="#i-gift"/></svg></span>Rewards</div>
+            </div>
+
+            <!-- 6 points -->
+            <div class="lbl"><span>Your points</span><a>History</a></div>
+            <div class="card pts blk">
+              <span class="mk">6</span>
+              <div>
+                <div class="row">
+                  <div>November<b class="js-m">+45</b></div>
+                  <div>2026 total<b class="js-y">+320</b></div>
+                </div>
+                <div class="bal-l">GFT points</div>
+                <div class="bal js-bal">120</div>
+                <div class="next js-next"><b>80 pts</b> to a free wash &amp; wax</div>
+              </div>
+              <svg class="dial" id="dial" viewBox="0 0 128 112" role="img" aria-label="Progress to next reward"></svg>
+            </div>
+
+            <!-- 7 appointment -->
+            <div class="lbl"><span>Active appointment</span><a>All</a></div>
+            <div class="blk">
+              <span class="mk">7</span>
+              <div class="card appt only-regular">
+                <div class="top">
+                  <div><b>Logbook service</b><small>Thu 6 Nov · 8:30 am · Ford Ranger</small></div>
+                  <span class="status">In progress</span>
+                </div>
+                <div class="track">
+                  <div class="st c1"><i><svg class="i" style="width:11px;height:11px;stroke-width:3.5"><use href="#i-check"/></svg></i>Created</div>
+                  <div class="st c2"><i><svg class="i" style="width:11px;height:11px;stroke-width:3.5"><use href="#i-check"/></svg></i>Approved</div>
+                  <div class="st c3"><i></i>In progress</div>
+                  <div class="st"><i></i>Ready to pick up</div>
+                </div>
+                <div class="eta">We'll send a notification when it's ready. Estimated 2:30 pm.</div>
+              </div>
+              <div class="card empty only-new" hidden>
+                <div class="t"><b>Book your first service</b><small>Pick a time online and earn 25 bonus points.</small></div>
+                <span class="go">Book</span>
+              </div>
+            </div>
+
+            <!-- 8 vehicles -->
+            <div class="lbl"><span>My garage</span><span class="addbtn">+ Add</span></div>
+            <div class="blk">
+              <span class="mk">8</span>
+              <div class="card veh only-regular">
+                <div class="h">
+                  <div class="plate">1XY·2ZZ<small>VICTORIA</small></div>
+                  <div><b>2019 Ford Ranger XLT</b><small>Last service 14 May · 86,760 km</small></div>
+                </div>
+                <div class="meter"><div class="l"><span>Next service</span><b>in 1,240 km</b></div><div class="bar"><i style="width:88%"></i></div></div>
+                <div class="meter"><div class="l"><span>Rego renewal</span><b>in 23 days</b></div><div class="bar am"><i style="width:94%"></i></div></div>
+              </div>
+              <div class="card empty only-new" hidden>
+                <span class="ico" style="color:#ff6a6f"><svg class="i lg"><use href="#i-car"/></svg></span>
+                <div class="t"><b>Add your car</b><small>Get service and rego reminders. +10 pts.</small></div>
+                <span class="go">Add</span>
+              </div>
+            </div>
+
+            <!-- 9 deals -->
+            <div class="lbl"><span>Deals this week</span><a>View all</a></div>
+            <div class="blk"><span class="mk">9</span><div class="deals">
+              <div class="deal d1"><span class="k">Brakes</span><span class="v">20% off pads</span><span class="s">Fitted, ends Sunday</span></div>
+              <div class="deal d2"><span class="k">With any service</span><span class="v">Free tyre rotation</span><span class="s">Members and non-members</span></div>
+              <div class="deal d3"><span class="k">Local partner</span><span class="v">Free coffee</span><span class="s">While you wait. Partner slot (example)</span></div>
+            </div></div>
+
+            <!-- 10 badges + refer -->
+            <div class="lbl"><span>Badges</span><a>3 of 8</a></div>
+            <div class="blk">
+              <span class="mk">10</span>
+              <div class="badges">
+                <div class="bd"><span class="hx"><svg class="i lg"><use href="#i-flag"/></svg></span>First booking</div>
+                <div class="bd js-b2"><span class="hx"><svg class="i lg"><use href="#i-wrench"/></svg></span>3 services</div>
+                <div class="bd js-b3"><span class="hx"><svg class="i lg"><use href="#i-spin"/></svg></span>Spin winner</div>
+                <div class="bd lock"><span class="hx"><svg class="i lg"><use href="#i-users"/></svg></span>Refer a mate</div>
+              </div>
+              <div class="card refer" style="margin-top:14px">
+                <span class="ico" style="color:#fff"><svg class="i lg"><use href="#i-users"/></svg></span>
+                <div class="t"><b>Refer a mate</b><small>They get $20 off. You get 50 pts.</small></div>
+                <span class="go">Share</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="tabs" aria-hidden="true">
+            <div class="on"><svg class="i lg"><use href="#i-home"/></svg>Home</div>
+            <div><svg class="i lg"><use href="#i-cal"/></svg>Appointment</div>
+            <div><svg class="i lg"><use href="#i-cardb"/></svg>Membership</div>
+            <div><svg class="i lg"><use href="#i-spin"/></svg>Spin</div>
+            <div><svg class="i lg"><use href="#i-user"/></svg>Profile</div>
+          </div>
+          <span class="homebar"></span>
+        </div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li class="note"><span class="num">1</span>
+        <h3>Points chip in the header <span class="effort e1">Small</span></h3>
+        <p class="from">LMCT+ has: <b>coin balance chip (10k) top-left</b></p>
+        <p class="d">Today the point balance only shows on the Membership tab. Put it on every screen's header; tapping it opens Membership. Swap the refresh button for pull-to-refresh, and put the GFT wordmark in the middle like LMCT+ does with its logo.</p>
+      </li>
+      <li class="note"><span class="num">2</span>
+        <h3>Welcome back, by name <span class="effort e1">Small</span></h3>
+        <p class="from">LMCT+ has: <b>"Welcome back, Ethan Crowley!" with photo</b></p>
+        <p class="d">"Hey there" becomes the customer's first name, with a Club badge for members or a "Join GFT Club" pill for everyone else. Sign in with Apple can hide the real name (the Profile tab currently shows "4jjbtybd7c"), so ask for a first name once during onboarding.</p>
+      </li>
+      <li class="note"><span class="num">3</span>
+        <h3>Reminder strip <span class="effort e1">Small</span></h3>
+        <p class="from">LMCT+ has: <b>"Access days left · 673" strip</b></p>
+        <p class="d">The garage version of a countdown that matters: kilometres to the next service, days until rego renewal, or "your car is ready". It shows whichever is most urgent, and tapping it books or opens the job.</p>
+      </li>
+      <li class="note hl"><span class="num">4</span>
+        <h3>Promo carousel with a live timer <span class="effort e2">Medium</span></h3>
+        <p class="from">LMCT+ has: <b>Daily Reward banner with countdown and slide dots</b></p>
+        <p class="d">Keep the current neon-car image, but give it a job. Slide 1 counts down to the weekly spin reset and links to Spin. The other slides are monthly specials and the Club offer, managed by the garage from the admin panel. Swipe the banner in the mockup to try it.</p>
+      </li>
+      <li class="note"><span class="num">5</span>
+        <h3>Round quick actions <span class="effort e1">Small</span></h3>
+        <p class="from">LMCT+ has: <b>Leaderboard · Special Offers · Achievements</b></p>
+        <p class="d">Book, Call us, Deals, Rewards. Booking stays the red primary action. This row replaces the two large buttons and frees about 120 px of screen height for the new content.</p>
+      </li>
+      <li class="note hl"><span class="num">6</span>
+        <h3>Points card with a rev-counter <span class="effort e2">Medium</span></h3>
+        <p class="from">LMCT+ has: <b>Sept EXP / 2025 EXP / coin balance with a 3D coin</b></p>
+        <p class="d">Points this month, points this year, and the balance. Where LMCT+ shows a coin, GFT shows a tacho dial that fills toward the next free reward. "80 pts to a free wash &amp; wax" gives people a reason to book again.</p>
+      </li>
+      <li class="note"><span class="num">7</span>
+        <h3>Live job tracker <span class="effort e1">Small</span></h3>
+        <p class="from">GFT addition</p>
+        <p class="d">The app already has the statuses (Created, Approved, In Progress, Ready to pick up) with their colours. Show them as a progress line on the active appointment, so customers stop calling to ask "is it done yet?".</p>
+      </li>
+      <li class="note"><span class="num">8</span>
+        <h3>My garage with service and rego meters <span class="effort e2">Medium</span></h3>
+        <p class="from">GFT upgrade of "My vehicles"</p>
+        <p class="d">A Victorian-style plate, the model, and two bars: next service and rego renewal. Needs odometer and rego-expiry fields on the vehicle. These also drive push reminders, which bring people back without needing a daily reward.</p>
+      </li>
+      <li class="note"><span class="num">9</span>
+        <h3>Deals this week <span class="effort e2">Medium</span></h3>
+        <p class="from">LMCT+ has: <b>Discounts carousel from partner businesses</b></p>
+        <p class="d">Start with GFT's own deals: brakes, tyres, add-ons. Leave one slot for local partners later (a café, a car wash, a detailer). Partners can pay for the slot or swap promotion.</p>
+      </li>
+      <li class="note"><span class="num">10</span>
+        <h3>Badges and Refer a mate <span class="effort e3">Large</span></h3>
+        <p class="from">LMCT+ has: <b>Achievements</b></p>
+        <p class="d">Simple milestones such as first booking, 3 services, spin winner and referred a mate, each worth bonus points. Referral is the one with a direct payoff for the garage: the friend gets $20 off their first job, and the customer gets 50 points once that job is completed.</p>
+      </li>
+    </ol>
+  </div>
+</section>
+
+<!-- ================= BACKGROUNDS ================= -->
+<section id="backgrounds" aria-labelledby="h-bg">
+  <div class="sec-head">
+    <p class="eyebrow">02 · Background options</p>
+    <h2 id="h-bg">Something better than flat black</h2>
+    <p>All six keep the cards solid, so text contrast doesn't change. The texture shows in the header area and the gaps between cards. Tap a tile to apply it to the phone above.</p>
+  </div>
+  <div class="tiles" id="tiles">
+    <button type="button" class="tile" id="tile-carbon" data-bg="carbon" aria-pressed="true">
+      <span class="sw bgfx" data-bg="carbon"><span class="fake-h"></span><span class="fake-c r"></span><span class="fake-c"></span><span class="fake-c"></span></span>
+      <h3>Carbon + tail-light <span class="rec">Recommended</span></h3>
+      <p>Carbon-fibre weave under a red glow, both fading out by the middle of the screen. It looks like a performance workshop and stays behind the content.</p>
+    </button>
+    <button type="button" class="tile" id="tile-glow" data-bg="glow" aria-pressed="false">
+      <span class="sw bgfx" data-bg="glow"><span class="fake-h"></span><span class="fake-c r"></span><span class="fake-c"></span><span class="fake-c"></span></span>
+      <h3>Tail-light glow</h3>
+      <p>A red glow behind the header, like brake lights on wet road. The smallest change, and the cheapest to build.</p>
+    </button>
+    <button type="button" class="tile" id="tile-tread" data-bg="tread" aria-pressed="false">
+      <span class="sw bgfx" data-bg="tread"><span class="fake-h"></span><span class="fake-c r"></span><span class="fake-c"></span><span class="fake-c"></span></span>
+      <h3>Tyre tread</h3>
+      <p>A chevron tread pattern down both edges. Very on-brand for a tyre shop. Keep it at about 5% opacity or it gets busy.</p>
+    </button>
+    <button type="button" class="tile" id="tile-contour" data-bg="contour" aria-pressed="false">
+      <span class="sw bgfx" data-bg="contour"><span class="fake-h"></span><span class="fake-c r"></span><span class="fake-c"></span><span class="fake-c"></span></span>
+      <h3>Contour lines</h3>
+      <p>Faint topographic lines. This is the closest match to LMCT+, which uses the same idea on blue.</p>
+    </button>
+    <button type="button" class="tile" id="tile-streaks" data-bg="streaks" aria-pressed="false">
+      <span class="sw bgfx" data-bg="streaks"><span class="fake-h"></span><span class="fake-c r"></span><span class="fake-c"></span><span class="fake-c"></span></span>
+      <h3>Speed lines</h3>
+      <p>Diagonal light streaks from the top-right corner. Gives a sense of movement, though it's the most "gamer" of the set.</p>
+    </button>
+    <button type="button" class="tile" id="tile-plain" data-bg="plain" aria-pressed="false">
+      <span class="sw bgfx" data-bg="plain"><span class="fake-h"></span><span class="fake-c r"></span><span class="fake-c"></span><span class="fake-c"></span></span>
+      <h3>Plain (today)</h3>
+      <p>The current flat black, for comparison.</p>
+    </button>
+  </div>
+  <p class="devnote">For the developers: each background is a 375 × 812 SVG in <code>assets/backgrounds/</code>. Place it at the top of the scroll view on every tab, full width, over a solid #0B0B0D, and let it scroll with the content. It fades to solid black at the bottom, so longer screens need nothing extra. Use the same treatment on Appointment, Membership, Spin and Profile so the tabs feel like one app.</p>
+</section>
+
+<!-- ================= BUILD ORDER ================= -->
+<section id="build" aria-labelledby="h-build">
+  <div class="sec-head">
+    <p class="eyebrow">03 · Build order</p>
+    <h2 id="h-build">Ship it in three drops</h2>
+    <p>Phase 1 uses data the app already has, so the client sees a new Home quickly. Later phases add backend work.</p>
+  </div>
+  <div class="phases">
+    <div class="phase">
+      <h3><span class="ph">Phase 1</span> · Quick wins</h3>
+      <p class="tagline">About 1–2 weeks. Uses existing data.</p>
+      <ul>
+        <li>New background on all tabs</li>
+        <li>Points chip in header (1)</li>
+        <li>Welcome by name + Club badge (2)</li>
+        <li>Round quick actions (5)</li>
+        <li>Live job tracker (7)</li>
+        <li>Better empty states for new users</li>
+      </ul>
+      <p class="needs"><b>Needs:</b> a first-name field at onboarding.</p>
+    </div>
+    <div class="phase">
+      <h3><span class="ph">Phase 2</span> · Engagement</h3>
+      <p class="tagline">About 2–3 weeks. Light backend work.</p>
+      <ul>
+        <li>Promo carousel managed by the garage (4)</li>
+        <li>Points card with progress dial (6)</li>
+        <li>Service and rego meters + push reminders (3, 8)</li>
+        <li>Deals this week (9)</li>
+      </ul>
+      <p class="needs"><b>Needs:</b> banner and deal admin (image, text, link, start/end date); monthly and yearly point totals; reward thresholds; odometer and rego-expiry fields on vehicles.</p>
+    </div>
+    <div class="phase">
+      <h3><span class="ph">Phase 3</span> · Growth</h3>
+      <p class="tagline">About 3–4 weeks. New features.</p>
+      <ul>
+        <li>Badges with bonus points (10)</li>
+        <li>Refer a mate with share link (10)</li>
+        <li>Local partner deals</li>
+      </ul>
+      <p class="needs"><b>Needs:</b> referral codes and deep links; rules for awarding badges; a partner deal type in the admin.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= LEAVE OUT ================= -->
+<section id="skip" aria-labelledby="h-skip">
+  <div class="sec-head">
+    <p class="eyebrow">04 · What not to copy</p>
+    <h2 id="h-skip">Parts of LMCT+ that don't suit a garage</h2>
+  </div>
+  <div class="two">
+    <div class="skip">
+      <div><b>Leaderboard</b><span>LMCT+ is a big national community. One garage ranking its own customers by spend would feel odd and shows other people's activity. Badges give the same sense of progress without the comparison.</span></div>
+      <div><b>Daily check-in rewards</b><span>People visit a garage every few months. A daily reward trains them to open the app and close it again. The weekly spin already covers this, so the carousel promotes the spin instead.</span></div>
+      <div><b>Removing "Call the garage"</b><span>It moves into the quick-action row but stays one tap away. Many garage customers still prefer to ring.</span></div>
+      <div><b>Empty screens for new users</b><span>In today's app, a new customer sees "No appointment for now" and "No vehicles for now". Each empty block should become a prompt with a reward, such as "Add your car, +10 pts". Switch the mockup to "Brand-new sign-up" to see it.</span></div>
+    </div>
+    <figure>
+      <img src="assets/images/current-home.jpg" alt="Current GFT Home screen: Hey there header, neon car image, two large buttons, empty appointment and vehicle cards on plain black.">
+      <figcaption>Home today, for comparison.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<footer>Prepared for Garage Full Throttle. Names, numbers, plates and prices in the mockup are examples, not real customer data.</footer>
+</div>
+
+<script>
+(function(){
+  var screen=document.getElementById('screen'), phone=document.getElementById('phone');
+
+  /* ---------- background switching ---------- */
+  function setBg(v){
+    screen.setAttribute('data-bg',v);
+    document.querySelectorAll('#seg-bg button, #tiles .tile').forEach(function(b){
+      b.setAttribute('aria-pressed', String(b.getAttribute('data-bg')===v));
+    });
+  }
+  document.querySelectorAll('#seg-bg button').forEach(function(b){ b.addEventListener('click',function(){ setBg(b.dataset.bg); }); });
+  document.querySelectorAll('#tiles .tile').forEach(function(b){ b.addEventListener('click',function(){
+    setBg(b.dataset.bg);
+    var top=phone.getBoundingClientRect().top;
+    if(top<-200 || top>window.innerHeight){ phone.scrollIntoView({behavior: matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth', block:'start'}); }
+  }); });
+
+  /* ---------- markers ---------- */
+  var mk=document.getElementById('mk-toggle');
+  mk.addEventListener('click',function(){
+    var on=mk.getAttribute('aria-pressed')!=='true';
+    mk.setAttribute('aria-pressed',String(on)); phone.classList.toggle('nomk',!on);
+  });
+
+  /* ---------- tacho dial ---------- */
+  var dial=document.getElementById('dial'), NS='http://www.w3.org/2000/svg';
+  var cx=64, cy=62, R=50, A0=135, A1=405;
+  function pt(a,r){ var t=a*Math.PI/180; return [cx+r*Math.cos(t), cy+r*Math.sin(t)]; }
+  function arc(a0,a1,r){ var p0=pt(a0,r), p1=pt(a1,r), large=(a1-a0)>180?1:0;
+    return 'M'+p0[0].toFixed(2)+' '+p0[1].toFixed(2)+' A'+r+' '+r+' 0 '+large+' 1 '+p1[0].toFixed(2)+' '+p1[1].toFixed(2); }
+  function el(n,a){ var e=document.createElementNS(NS,n); for(var k in a) e.setAttribute(k,a[k]); return e; }
+  function drawDial(val,max){
+    dial.innerHTML='';
+    var frac=Math.max(0,Math.min(1,val/max)), aV=A0+(A1-A0)*frac;
+    dial.appendChild(el('path',{d:arc(A0,A1,R),stroke:'#2e2e35','stroke-width':8,fill:'none','stroke-linecap':'round'}));
+    dial.appendChild(el('path',{d:arc(A0+(A1-A0)*0.85,A1,R),stroke:'#5a1216','stroke-width':8,fill:'none','stroke-linecap':'round'}));
+    if(frac>0.005) dial.appendChild(el('path',{d:arc(A0,aV,R),stroke:'#E0242B','stroke-width':8,fill:'none','stroke-linecap':'round'}));
+    for(var i=0;i<=10;i++){
+      var a=A0+(A1-A0)*i/10, p0=pt(a,R-9), p1=pt(a,R-(i%5===0?16:13));
+      dial.appendChild(el('line',{x1:p0[0],y1:p0[1],x2:p1[0],y2:p1[1],stroke:i/10<=frac?'#ff8a8e':'#55555d','stroke-width':i%5===0?2:1.2,'stroke-linecap':'round'}));
+    }
+    var n=pt(aV,R-14), nb=pt(aV+180,7);
+    dial.appendChild(el('line',{x1:nb[0],y1:nb[1],x2:n[0],y2:n[1],stroke:'#fff','stroke-width':2.4,'stroke-linecap':'round'}));
+    dial.appendChild(el('circle',{cx:cx,cy:cy,r:5,fill:'#E0242B',stroke:'#fff','stroke-width':1.5}));
+    var t=el('text',{x:cx,y:cy+30,'text-anchor':'middle',fill:'#fff','font-size':15,'font-weight':700}); t.textContent=val+' / '+max; dial.appendChild(t);
+    var t2=el('text',{x:cx,y:cy+42,'text-anchor':'middle',fill:'#9a9aa3','font-size':9,'letter-spacing':'1.5'}); t2.textContent='NEXT REWARD'; dial.appendChild(t2);
+  }
+
+  /* ---------- customer state ---------- */
+  var states={
+    regular:{bal:120,max:200,m:'+45',y:'+320',name:'Jordan',club:['member','GFT Club member'],
+      next:'<b>80 pts</b> to a free wash &amp; wax',strip:['Next service due<small>2019 Ford Ranger · logbook service</small>','1,240 km','']},
+    new:{bal:20,max:100,m:'+20',y:'+20',name:'Sam',club:['join','Join GFT Club'],
+      next:'<b>80 pts</b> to a free tyre rotation',strip:['Welcome gift: 20 pts<small>Add your car to unlock service reminders</small>','+10 pts','amber']}
+  };
+  function setState(k){
+    var s=states[k];
+    document.querySelectorAll('.js-bal').forEach(function(e){e.textContent=s.bal;});
+    document.querySelector('.js-m').textContent=s.m; document.querySelector('.js-y').textContent=s.y;
+    document.querySelector('.js-name').textContent=s.name;
+    var cl=document.querySelector('.js-club'); cl.className='club '+s.club[0]+' js-club'; cl.textContent=s.club[1];
+    document.querySelector('.js-next').innerHTML=s.next;
+    document.querySelector('.js-strip-t').innerHTML=s.strip[0];
+    var p=document.querySelector('.js-strip-p'); p.textContent=s.strip[1]; p.className='pill js-strip-p'+(s.strip[2]?' '+s.strip[2]:'');
+    document.querySelectorAll('.only-regular').forEach(function(e){e.hidden=(k!=='regular');});
+    document.querySelectorAll('.only-new').forEach(function(e){e.hidden=(k!=='new');});
+    document.querySelectorAll('.js-b2,.js-b3').forEach(function(e){e.classList.toggle('lock',k==='new');});
+    document.querySelectorAll('#seg-state button').forEach(function(b){b.setAttribute('aria-pressed',String(b.dataset.state===k));});
+    drawDial(s.bal,s.max);
+  }
+  document.querySelectorAll('#seg-state button').forEach(function(b){ b.addEventListener('click',function(){ setState(b.dataset.state); }); });
+  setState('regular');
+
+  /* ---------- carousel dots ---------- */
+  var car=document.getElementById('car'), dots=document.querySelectorAll('#dots i');
+  car.addEventListener('scroll',function(){
+    var i=Math.round(car.scrollLeft/(car.clientWidth+10));
+    dots.forEach(function(d,j){d.classList.toggle('on',j===i);});
+  },{passive:true});
+
+  /* ---------- weekly spin countdown (to next Monday 00:00) ---------- */
+  var timer=document.getElementById('timer');
+  function tick(){
+    var now=new Date(), n=new Date(now); n.setHours(0,0,0,0);
+    var add=(8-n.getDay())%7; if(add===0) add=7; n.setDate(n.getDate()+add);
+    var d=Math.max(0,n-now), days=Math.floor(d/864e5), h=Math.floor(d/36e5)%24, m=Math.floor(d/6e4)%60, sec=Math.floor(d/1e3)%60;
+    timer.textContent=days+'d '+String(h).padStart(2,'0')+'h '+String(m).padStart(2,'0')+'m '+String(sec).padStart(2,'0')+'s';
+  }
+  tick(); setInterval(tick,1000);
+})();
+</script>
+
+</body>
+</html>

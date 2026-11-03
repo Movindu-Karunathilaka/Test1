@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 44 44">
+<defs><radialGradient id="c" cx=".35" cy=".3" r=".75"><stop offset="0" stop-color="#FF6A6F"/><stop offset=".55" stop-color="#E0242B"/><stop offset="1" stop-color="#9E1419"/></radialGradient></defs>
+<circle cx="22" cy="22" r="22" fill="url(#c)"/><circle cx="22" cy="22" r="20" fill="none" stroke="#FFFFFF" stroke-opacity=".25" stroke-width="2"/>
+<text x="22" y="29.5" text-anchor="middle" font-family="Barlow Condensed, Arial Narrow, Arial, sans-serif" font-weight="700" font-size="22" fill="#FFFFFF">P</text>
+</svg>
