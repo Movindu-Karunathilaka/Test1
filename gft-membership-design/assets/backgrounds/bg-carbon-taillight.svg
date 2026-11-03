@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="375" height="812" viewBox="0 0 375 812">
+<defs>
+<linearGradient id="h" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#26262B"/><stop offset="1" stop-color="#141416"/></linearGradient>
+<linearGradient id="v" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#232327"/><stop offset="1" stop-color="#131315"/></linearGradient>
+<pattern id="cf" width="12" height="12" patternUnits="userSpaceOnUse">
+<rect width="12" height="12" fill="#121214"/>
+<rect x="0" y="0" width="6" height="6" fill="url(#h)"/><rect x="6" y="6" width="6" height="6" fill="url(#h)"/>
+<rect x="6" y="0" width="6" height="6" fill="url(#v)"/><rect x="0" y="6" width="6" height="6" fill="url(#v)"/>
+</pattern>
+<linearGradient id="fadeg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0.8"/><stop offset="0.5" stop-color="#fff" stop-opacity="0.4"/><stop offset="0.85" stop-color="#fff" stop-opacity="0.08"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient><mask id="fade" maskUnits="userSpaceOnUse" x="0" y="0" width="375" height="812"><rect width="375" height="812" fill="url(#fadeg)"/></mask>
+<radialGradient id="glow" gradientUnits="userSpaceOnUse" cx="187.5" cy="-60" r="380" gradientTransform="translate(187.5 -60) scale(1.2829 1) translate(-187.5 60)"><stop offset="0" stop-color="#E0242B" stop-opacity="0.42"/><stop offset=".55" stop-color="#E0242B" stop-opacity="0.08"/><stop offset=".75" stop-color="#E0242B" stop-opacity="0"/></radialGradient>
+</defs>
+<rect width="375" height="812" fill="#0B0B0D"/>
+<rect width="375" height="812" fill="url(#cf)" mask="url(#fade)"/>
+<rect width="375" height="812" fill="url(#glow)"/>
+</svg>

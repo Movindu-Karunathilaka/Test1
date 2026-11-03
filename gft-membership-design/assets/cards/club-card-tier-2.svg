@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="340" height="214" viewBox="0 0 340 214" role="img" aria-label="GFT Club card, tier 2">
+<defs>
+<linearGradient id="cgx" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4A4E55"/><stop offset="1" stop-color="#141518"/></linearGradient>
+<linearGradient id="chx" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF" stop-opacity=".09"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/></linearGradient>
+<linearGradient id="cvx" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#FFFFFF" stop-opacity=".07"/><stop offset="1" stop-color="#000000" stop-opacity=".12"/></linearGradient>
+<pattern id="cpx" width="10" height="10" patternUnits="userSpaceOnUse">
+<rect x="0" y="0" width="5" height="5" fill="url(#chx)"/><rect x="5" y="5" width="5" height="5" fill="url(#chx)"/>
+<rect x="5" y="0" width="5" height="5" fill="url(#cvx)"/><rect x="0" y="5" width="5" height="5" fill="url(#cvx)"/></pattern>
+<clipPath id="ccx"><rect width="340" height="214" rx="18"/></clipPath>
+</defs>
+<g clip-path="url(#ccx)">
+<rect width="340" height="214" fill="url(#cgx)"/>
+<rect width="340" height="214" fill="url(#cpx)"/>
+<polygon points="196,0 252,0 122,214 66,214" fill="#C9CDD3" fill-opacity=".16"/>
+<polygon points="262,0 270,0 140,214 132,214" fill="#C9CDD3" fill-opacity=".55"/>
+<text x="326" y="150" text-anchor="end" font-family="Barlow Condensed, Arial Narrow, Arial, sans-serif" font-style="italic" font-weight="700" font-size="104" fill="#FFFFFF" fill-opacity=".07">15%</text>
+</g>
+<rect x=".75" y=".75" width="338.5" height="212.5" rx="17.25" fill="none" stroke="#FFFFFF" stroke-opacity=".14" stroke-width="1.5"/>
+<text x="24" y="46" font-family="Barlow Condensed, Arial Narrow, Arial, sans-serif" font-style="italic" font-weight="700" font-size="28" fill="#FFFFFF">GFT CLUB</text>
+<text x="24" y="62" font-family="Barlow, Arial, sans-serif" font-weight="600" font-size="8.5" letter-spacing="2.4" fill="#C4C4CC" fill-opacity=".8">GARAGE FULL THROTTLE</text>
+<rect x="246" y="24" width="72" height="24" rx="12" fill="#C9CDD3"/>
+<text x="282" y="40.5" text-anchor="middle" font-family="Barlow, Arial, sans-serif" font-weight="700" font-size="11" letter-spacing="1.6" fill="#141518">TIER 2</text>
+<text x="24" y="120" font-family="Barlow Condensed, Arial Narrow, Arial, sans-serif" font-weight="600" font-size="15" letter-spacing="3" fill="#FFFFFF" fill-opacity=".75">GFT 0042 1187</text>
+<text x="24" y="180" font-family="Barlow, Arial, sans-serif" font-weight="700" font-size="16" letter-spacing="1.6" fill="#FFFFFF">JORDAN</text>
+<text x="24" y="197" font-family="Barlow, Arial, sans-serif" font-weight="600" font-size="8.5" letter-spacing="1.8" fill="#C4C4CC" fill-opacity=".75">MEMBER SINCE 01/26</text>
+<text x="316" y="182" text-anchor="end" font-family="Barlow Condensed, Arial Narrow, Arial, sans-serif" font-weight="700" font-size="28" fill="#FFFFFF">1,420</text>
+<text x="316" y="197" text-anchor="end" font-family="Barlow, Arial, sans-serif" font-weight="600" font-size="8.5" letter-spacing="2" fill="#C4C4CC" fill-opacity=".75">POINTS</text>
+</svg>
