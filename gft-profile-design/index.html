@@ -1,0 +1,839 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>GFT Profile Refresh</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,600;0,700;1,700&family=Barlow:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: same proposal system as the other four tabs. Left = phone you can navigate (Profile and its sub-screens), right = numbered notes. */
+:root{
+  --bg:#0B0B0D; --bg-2:#111114; --panel:#18181B; --line:#2A2A31;
+  --fg:#F4F4F5; --muted:#A1A1AA; --dim:#71717A;
+  --red:#E0242B; --red-hot:#FF4A50; --red-deep:#9E1419;
+  --amber:#F5A524; --green:#2DC66B; --blue:#4C8DF6;
+  --display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+  --body:"Barlow",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --ios:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+img{max-width:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.55;
+  background-image:radial-gradient(90% 420px at 50% -120px,rgba(224,36,43,.22),transparent 70%);background-repeat:no-repeat}
+.wrap{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:48px 80px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;letter-spacing:.01em}
+h1{font-size:clamp(44px,8vw,84px);line-height:.92;font-style:italic;font-weight:700;text-transform:uppercase}
+h1 em{color:var(--red-hot);font-style:italic}
+h2{font-size:clamp(30px,4.4vw,44px);line-height:1;text-transform:uppercase;font-weight:700}
+h3{font-size:22px;line-height:1.1;font-weight:600}
+p{margin:0}
+a{color:var(--red-hot)}
+.eyebrow{font-weight:600;font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+.lede{font-size:19px;color:#D4D4D8;max-width:62ch}
+:focus-visible{outline:2px solid var(--red-hot);outline-offset:3px;border-radius:6px}
+header.top{display:grid;gap:20px;padding-bottom:40px;border-bottom:1px solid var(--line)}
+.brief{display:flex;flex-wrap:wrap;gap:10px;margin-top:6px}
+.brief span{border:1px solid var(--line);background:var(--bg-2);border-radius:999px;padding:6px 14px;font-size:14px;color:#D4D4D8}
+.brief b{color:var(--fg);font-weight:600}
+.brief span.kept{border-color:rgba(45,198,107,.45)}
+.brief span.kept b{color:#7fe3a6}
+section{padding-top:64px;display:grid;gap:28px}
+.sec-head{display:grid;gap:10px;max-width:70ch}
+.sec-head p{color:var(--muted)}
+.controls{display:flex;flex-wrap:wrap;gap:18px 28px;align-items:flex-end}
+.ctl{display:grid;gap:8px}
+.ctl > span{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);font-weight:600}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{font:500 14px var(--body);color:var(--muted);background:var(--bg-2);border:1px solid var(--line);border-radius:999px;padding:7px 14px;cursor:pointer}
+.seg button[aria-pressed="true"]{color:var(--fg);border-color:var(--red);background:rgba(224,36,43,.14)}
+.seg button:hover{color:var(--fg)}
+.stage{display:grid;grid-template-columns:minmax(0,395px) minmax(0,1fr);gap:48px;align-items:start}
+.phone-col{position:sticky;top:calc(env(safe-area-inset-top,0px) + 16px)}
+@media (max-width:900px){.stage{grid-template-columns:minmax(0,1fr)}.phone-col{position:static;justify-self:center;width:100%;max-width:395px}}
+.notes{list-style:none;margin:0;padding:0;display:grid;gap:14px}
+.notes .grp{font:600 12px var(--body);letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin-top:8px;display:flex;align-items:center;gap:10px}
+.notes .grp:first-child{margin-top:0}
+.notes .grp button{font:600 12px var(--body);letter-spacing:.02em;text-transform:none;color:var(--red-hot);background:none;border:0;padding:0;cursor:pointer}
+.notes .grp button:hover{text-decoration:underline}
+.note{display:grid;grid-template-columns:34px minmax(0,1fr);gap:4px 14px;padding:18px 18px 18px 14px;background:var(--bg-2);border:1px solid var(--line);border-radius:16px}
+.note .num{grid-row:span 3;width:30px;height:30px;border-radius:50%;background:var(--red);color:#fff;font:700 16px var(--display);display:grid;place-items:center}
+.note h3{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.from{font-size:14px;color:var(--dim)}
+.from b{color:var(--muted);font-weight:500}
+.note p.d{color:#D4D4D8;font-size:15.5px}
+.effort{font:600 11px var(--body);letter-spacing:.12em;text-transform:uppercase;border-radius:999px;padding:3px 9px;border:1px solid}
+.e1{color:var(--green);border-color:rgba(45,198,107,.4)}
+.e2{color:var(--amber);border-color:rgba(245,165,36,.4)}
+.e3{color:var(--red-hot);border-color:rgba(255,74,80,.45)}
+.note.hl{border-color:rgba(224,36,43,.6)}
+
+/* ================= PHONE ================= */
+.phone{width:100%;max-width:395px;margin:0 auto;border-radius:52px;padding:10px;background:linear-gradient(145deg,#2a2a30,#121215 40%,#26262c);box-shadow:0 40px 80px -30px rgba(0,0,0,.9),0 0 0 1px #34343b}
+.screen{position:relative;border-radius:42px;overflow:hidden;font-family:var(--ios);color:#fff;-webkit-font-smoothing:antialiased;font-size:15px;line-height:1.3;min-height:812px;display:flex;flex-direction:column}
+.screen > *{position:relative;z-index:1}
+.bgfx{background-color:#0B0B0D;background-repeat:no-repeat;background-position:top center;background-size:100% auto}
+[data-bg="carbon"]{background-image:url("assets/backgrounds/bg-carbon-taillight.svg")}
+[data-bg="glow"]{background-image:url("assets/backgrounds/bg-taillight-glow.svg")}
+[data-bg="tread"]{background-image:url("assets/backgrounds/bg-tyre-tread.svg")}
+[data-bg="contour"]{background-image:url("assets/backgrounds/bg-contour-lines.svg")}
+[data-bg="streaks"]{background-image:url("assets/backgrounds/bg-speed-lines.svg")}
+.sb{display:flex;justify-content:space-between;align-items:center;padding:16px 30px 6px;font-weight:600;font-size:15px}
+.sb .ic{display:flex;gap:6px;align-items:center}
+.view{flex:1;display:flex;flex-direction:column}
+.view.anim{animation:slidein .28s cubic-bezier(.2,.9,.3,1)}
+@keyframes slidein{from{transform:translateX(24px);opacity:.3}to{transform:none;opacity:1}}
+.pad{padding:0 16px;flex:1}
+.ph-head{display:flex;align-items:center;justify-content:space-between;padding:10px 16px 6px;gap:8px}
+.chip-pts{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);border-radius:999px;padding:5px 11px 5px 5px;font-weight:600;font-size:14px}
+.coin{width:22px;height:22px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ff6a6f,var(--red) 55%,var(--red-deep));display:grid;place-items:center;font:700 11px var(--display);color:#fff;box-shadow:inset 0 0 0 2px rgba(255,255,255,.25)}
+.wordmark{font:italic 700 20px/1 var(--display);letter-spacing:.04em;text-transform:uppercase;text-align:center}
+.wordmark small{display:block;font:600 8.5px/1 var(--body);letter-spacing:.32em;color:#a8a8b0;margin-top:3px;font-style:normal}
+.wordmark i{color:var(--red-hot)}
+.icbtn{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);position:relative;color:#fff;cursor:pointer;padding:0}
+.icbtn .dot{position:absolute;top:7px;right:8px;width:8px;height:8px;border-radius:50%;background:var(--red-hot);box-shadow:0 0 0 2px #0B0B0D}
+.subhead{display:flex;align-items:center;gap:12px;padding:10px 16px 8px}
+.subhead h4{margin:0;font-size:26px;font-weight:700;flex:1;letter-spacing:-.01em}
+.subhead .act{white-space:nowrap;font-size:13.5px;font-weight:600;color:#ff8a8e;background:none;border:0;cursor:pointer;font-family:var(--ios)}
+.blk{position:relative}
+.mk{position:absolute;left:-8px;top:-8px;width:20px;height:20px;border-radius:50%;background:var(--red);color:#fff;font:700 12px/20px var(--display);text-align:center;z-index:5;box-shadow:0 0 0 2px #0B0B0D}
+.phone.nomk .mk{display:none}
+.lbl{font-size:12.5px;letter-spacing:.16em;text-transform:uppercase;color:#a1a1aa;font-weight:600;display:flex;justify-content:space-between;align-items:center;margin:22px 0 10px}
+.card{background:rgba(24,24,27,.95);border:1px solid #2a2a31;border-radius:18px;padding:14px}
+svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+svg.i.sm{width:15px;height:15px}
+svg.i.lg{width:24px;height:24px}
+.tap{cursor:pointer}
+.tap:hover{border-color:#3a3a42}
+
+/* profile home */
+.idc{display:grid;grid-template-columns:76px minmax(0,1fr);gap:4px 14px;align-items:center;margin-top:12px}
+.idc .av{grid-row:span 2;width:76px;height:76px}
+.idc .av svg{width:100%;height:100%}
+.idc h5{margin:0;font-size:22px;font-weight:700}
+.idc h5.miss{color:#a1a1aa;font-weight:600;font-size:18px}
+.idc .tierl{font-size:12.5px;color:#a1a1aa;display:grid;gap:1px}
+.idc .tierl b{color:#ff8a8e;font-weight:700}
+.idc .editb{position:absolute;right:14px;top:14px;font-size:12.5px;font-weight:600;color:#fff;background:#26262b;border:1px solid #33333a;border-radius:999px;padding:5px 10px;display:flex;gap:5px;align-items:center;cursor:pointer}
+.stats{grid-column:1 / -1;display:grid;grid-template-columns:repeat(3,1fr);margin-top:12px;border-top:1px solid #26262b;padding-top:12px;text-align:center}
+.stats div{display:grid;font-size:11.5px;color:#9a9aa3}
+.stats div + div{border-left:1px solid #26262b}
+.stats b{font-size:18px;color:#fff;font-variant-numeric:tabular-nums}
+.complete{display:grid;grid-template-columns:52px minmax(0,1fr);gap:12px;align-items:center;margin-top:12px;border-color:rgba(245,165,36,.45);background:linear-gradient(110deg,rgba(245,165,36,.12),rgba(24,24,27,.95) 60%)}
+.complete .ring{width:52px;height:52px}
+.complete b{display:block;font-size:14.5px}
+.complete small{color:#c4c4cc;font-size:12.5px}
+.complete .chips{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
+.complete .chips span{font-size:11px;font-weight:600;border-radius:999px;padding:3px 8px;background:#26262b;color:#e4e4e7}
+.complete .chips span.ok{background:rgba(45,198,107,.15);color:#7fe3a6}
+.sg{font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--amber);border:1px solid rgba(245,165,36,.5);border-radius:999px;padding:1px 6px;vertical-align:2px;margin-left:4px}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tl{background:rgba(24,24,27,.95);border:1px solid #2a2a31;border-radius:18px;padding:14px;display:grid;gap:10px;position:relative;text-align:left;color:#fff;font-family:var(--ios);cursor:pointer}
+.tl:hover{border-color:#3a3a42}
+.tl .ic{width:38px;height:38px;border-radius:12px;background:rgba(224,36,43,.14);color:#ff6a6f;display:grid;place-items:center}
+.tl b{font-size:15px;display:block}
+.tl small{color:#9a9aa3;font-size:12px;display:flex;align-items:center;gap:5px}
+.tl .badge{position:absolute;top:12px;right:12px;min-width:22px;height:22px;border-radius:11px;background:var(--red);color:#fff;font-size:12px;font-weight:700;display:grid;place-items:center;padding:0 6px}
+.dotc{width:7px;height:7px;border-radius:50%;background:var(--green);flex:none}
+.dotc.closed{background:var(--red-hot)}
+.list{background:rgba(24,24,27,.95);border:1px solid #2a2a31;border-radius:18px;padding:2px 14px}
+.row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #26262b;font-size:14.5px;cursor:pointer}
+.row:last-child{border-bottom:0}
+.row .ic{color:#ff6a6f;display:grid;place-items:center}
+.row span.t{flex:1;min-width:0}
+.row small{color:#8a8a93;font-size:12.5px}
+.row .chev{color:#55555d}
+.row.danger{color:#ff8a8e}
+.row.danger .ic{color:#ff8a8e}
+.ver{text-align:center;font-size:11.5px;color:#55555d;margin:16px 0 4px}
+
+/* edit */
+.form{display:grid;gap:14px;margin-top:6px}
+.f{display:grid;gap:6px}
+.f label{font-size:13px;color:#a1a1aa;font-weight:600}
+.f .in{background:#1b1b1f;border:1px solid #2e2e35;border-radius:14px;padding:13px 14px;font-size:15.5px;display:flex;align-items:center;gap:8px;min-height:48px}
+.f .in.ph{color:#55555d}
+.f .in.focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(224,36,43,.18)}
+.f .in.ro{background:#151518;color:#a1a1aa}
+.f .in .pill{margin-left:auto;font-size:11px;font-weight:700;border-radius:999px;padding:3px 8px;background:#26262b;color:#c4c4cc;white-space:nowrap}
+.f .help{font-size:12px;color:#8a8a93}
+.f .help b{color:#ff8a8e;font-weight:600}
+.two-f{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.avedit{display:grid;justify-items:center;gap:6px;margin-top:4px}
+.avedit .av{width:92px;height:92px;position:relative}
+.avedit .av svg{width:100%;height:100%}
+.avedit .cam{position:absolute;right:-2px;bottom:-2px;width:32px;height:32px;border-radius:50%;background:#fff;color:#111;display:grid;place-items:center;box-shadow:0 0 0 3px #0B0B0D}
+.avedit small{color:#a1a1aa;font-size:12.5px}
+.savebar{position:sticky!important;bottom:0;margin:14px -16px 0;padding:10px 16px 12px;background:linear-gradient(180deg,rgba(11,11,13,0),rgba(11,11,13,.96) 35%);z-index:4!important}
+.savebar span{display:block;text-align:center;background:var(--red);border-radius:16px;padding:14px;font-weight:700;font-size:16px}
+.savebar span.off{background:#26262b;color:#71717a}
+
+/* garage */
+.veh{display:grid;gap:12px;margin-bottom:10px}
+.veh .h{display:flex;align-items:center;gap:12px}
+.plate{background:#fff;color:#0b2a6b;border-radius:6px;padding:4px 8px 2px;font:700 17px/1 var(--display);letter-spacing:.08em;border:2px solid #0b2a6b;text-align:center;min-width:86px}
+.plate small{display:block;font:600 6.5px/1.4 var(--body);letter-spacing:.2em}
+.veh .h b{display:block;font-size:15.5px}
+.veh .h small{color:#9a9aa3;font-size:12.5px}
+.veh .h .more{margin-left:auto;color:#71717a}
+.meter{display:grid;gap:5px;font-size:12.5px;color:#a1a1aa}
+.meter .l{display:flex;justify-content:space-between}
+.meter .l b{color:#fff;font-weight:600}
+.bar{height:6px;border-radius:3px;background:#2e2e35;overflow:hidden}
+.bar i{display:block;height:100%;border-radius:3px;background:linear-gradient(90deg,#ff6a6f,var(--red))}
+.bar.am i{background:var(--amber)}
+.bar.gr i{background:var(--green)}
+.veh .acts{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+.veh .acts span{display:flex;justify-content:center;align-items:center;gap:5px;font-size:12px;font-weight:600;background:#202024;border-radius:10px;padding:8px 4px;color:#e4e4e7}
+.addcar{border-style:dashed;border-color:#3a3a42;display:grid;gap:10px}
+.addcar b{font-size:15px}
+.addcar .look{display:grid;grid-template-columns:minmax(0,1fr) 70px;gap:8px}
+.addcar .look .in{background:#fff;color:#0b2a6b;border-radius:10px;padding:10px 12px;font:700 20px/1 var(--display);letter-spacing:.12em;border:2px solid #0b2a6b;text-transform:uppercase}
+.addcar .look .st{background:#1b1b1f;border:1px solid #2e2e35;border-radius:10px;display:grid;place-items:center;font-weight:700;font-size:14px}
+.addcar .found{display:flex;gap:10px;align-items:center;background:rgba(45,198,107,.1);border:1px solid rgba(45,198,107,.4);border-radius:12px;padding:10px 12px;font-size:13px}
+.addcar .found b{font-size:14px;display:block}
+.addcar .found small{color:#a1a1aa}
+.addcar .go{background:var(--red);color:#fff;font-weight:700;text-align:center;border-radius:12px;padding:11px;font-size:14.5px}
+.empty{display:grid;justify-items:center;gap:8px;text-align:center;padding:18px 10px 6px}
+.empty svg{width:100%;max-width:230px;height:auto}
+.empty b{font-size:18px}
+.empty p{color:#a1a1aa;font-size:13px;max-width:30ch}
+
+/* notifications */
+.nt{display:grid;grid-template-columns:36px minmax(0,1fr) auto;gap:2px 12px;padding:12px 0;border-bottom:1px solid #26262b;align-items:start}
+.nt:last-child{border-bottom:0}
+.nt .ic{grid-row:span 2;width:36px;height:36px;border-radius:11px;display:grid;place-items:center}
+.nt b{font-size:14.5px}
+.nt p{grid-column:2 / -1;font-size:13px;color:#b4b4bc;line-height:1.35}
+.nt time{font-size:11.5px;color:#8a8a93;white-space:nowrap;display:flex;gap:6px;align-items:center}
+.nt .u{width:8px;height:8px;border-radius:50%;background:var(--red-hot)}
+.nt.read b{font-weight:500;color:#d4d4d8}
+.k-job{background:rgba(45,198,107,.14);color:#5fe08f}
+.k-extra{background:rgba(245,165,36,.14);color:var(--amber)}
+.k-spin{background:rgba(224,36,43,.15);color:#ff6a6f}
+.k-rego{background:rgba(76,141,246,.15);color:#7fb0ff}
+.k-tier{background:rgba(212,168,74,.15);color:#e3c27a}
+.ngrp{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#8a8a93;font-weight:600;margin:16px 0 2px}
+.prefs .pr{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #26262b}
+.prefs .pr:last-child{border-bottom:0}
+.prefs .pr .t{flex:1;min-width:0}
+.prefs .pr b{display:block;font-size:14.5px;font-weight:600}
+.prefs .pr small{color:#9a9aa3;font-size:12px}
+.sw{width:50px;height:30px;border-radius:15px;background:#3a3a42;position:relative;flex:none;border:0;cursor:pointer;padding:0;transition:background .2s}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 2px 4px rgba(0,0,0,.4)}
+.sw[aria-checked="true"]{background:var(--green)}
+.sw[aria-checked="true"]::after{transform:translateX(20px)}
+.sw.lockd{opacity:.6;cursor:not-allowed}
+
+/* contact */
+.gcard{display:grid;gap:4px}
+.gcard h5{margin:0;font-size:20px;font-weight:700}
+.gcard .addr{color:#a1a1aa;font-size:14px;display:flex;gap:8px;align-items:center;justify-content:space-between}
+.gcard .addr button{background:#26262b;border:1px solid #33333a;color:#e4e4e7;border-radius:999px;font:600 11.5px var(--ios);padding:4px 9px;display:flex;gap:4px;align-items:center;cursor:pointer;flex:none}
+.gcard .tel{font-size:16px;font-weight:600;margin-top:4px}
+.status{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:700;border-radius:999px;padding:5px 11px;margin-top:8px;justify-self:start}
+.status.open{background:rgba(45,198,107,.14);color:#5fe08f;border:1px solid rgba(45,198,107,.5)}
+.status.closed{background:rgba(224,36,43,.12);color:#ff8a8e;border:1px solid rgba(224,36,43,.5)}
+.status i{width:8px;height:8px;border-radius:50%;background:currentColor}
+.mapc{margin-top:12px;border-radius:18px;overflow:hidden;border:1px solid #2a2a31}
+.mapc svg{display:block;width:100%;height:auto}
+.cacts{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px;text-align:center}
+.cacts div{display:grid;justify-items:center;gap:6px;font-size:12px;color:#e4e4e7;font-weight:600}
+.cacts .c{width:54px;height:54px;border-radius:18px;display:grid;place-items:center;background:#1c1c20;border:1px solid #2e2e35;color:#ff6a6f}
+.cacts div:first-child .c{background:var(--red);border-color:var(--red);color:#fff}
+.hours .hr{display:flex;justify-content:space-between;padding:9px 0;font-size:14.5px;border-bottom:1px solid #26262b}
+.hours .hr:last-of-type{border-bottom:0}
+.hours .hr span:last-child{color:#a1a1aa;font-variant-numeric:tabular-nums}
+.hours .hr.today{color:#fff;font-weight:700}
+.hours .hr.today span:last-child{color:#fff}
+.hours .hr.today span:first-child::after{content:"Today";font-size:10.5px;font-weight:700;letter-spacing:.06em;margin-left:8px;background:var(--red);color:#fff;border-radius:999px;padding:2px 7px;vertical-align:1px}
+.hours .ph{font-size:12px;color:#8a8a93;margin-top:8px}
+
+.tabs{display:grid;grid-template-columns:repeat(5,1fr);padding:10px 4px 26px;margin-top:18px;background:rgba(11,11,13,.96);border-top:1px solid #222227}
+.tabs div{display:grid;justify-items:center;gap:4px;font-size:11px;color:#a1a1aa}
+.tabs div.on{color:var(--red-hot)}
+.homebar{position:absolute!important;bottom:8px;left:50%;transform:translateX(-50%);width:120px;height:5px;border-radius:3px;background:#fff;z-index:25!important}
+
+/* ---------- lower sections ---------- */
+.rules{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+@media (max-width:760px){.rules{grid-template-columns:minmax(0,1fr)}}
+.rules div{border:1px solid rgba(245,165,36,.35);background:rgba(245,165,36,.05);border-radius:16px;padding:16px 18px;display:grid;gap:6px;align-content:start}
+.rules b{font-family:var(--display);font-size:20px;font-weight:600}
+.rules span{color:#D4D4D8;font-size:15px}
+.phases{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+@media (max-width:860px){.phases{grid-template-columns:minmax(0,1fr)}}
+.phase{border:1px solid var(--line);border-radius:18px;padding:20px;background:var(--bg-2);display:grid;gap:12px;align-content:start}
+.phase .tagline{font-size:14px;color:var(--muted)}
+.phase ul{margin:0;padding-left:18px;display:grid;gap:6px;font-size:15px;color:#D4D4D8}
+.phase .needs{font-size:13.5px;color:var(--dim);border-top:1px solid var(--line);padding-top:10px}
+.phase .needs b{color:var(--muted);font-weight:600}
+.phase h3 .ph{color:var(--red-hot)}
+.two{display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:32px;align-items:start}
+@media (max-width:760px){.two{grid-template-columns:minmax(0,1fr)}}
+.skip{display:grid;gap:14px}
+.skip div{display:grid;gap:4px;padding-bottom:14px;border-bottom:1px solid var(--line)}
+.skip b{font-family:var(--display);font-size:21px;font-weight:600}
+.skip span{color:#D4D4D8;font-size:15.5px;max-width:68ch}
+figure.today{margin:0;display:grid;gap:8px}
+figure.today img{border-radius:22px;border:1px solid var(--line);width:100%;max-width:220px}
+figure.today figcaption{font-size:13px;color:var(--dim)}
+.series{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
+@media (max-width:900px){.series{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:480px){.series{grid-template-columns:minmax(0,1fr)}}
+.series a{display:grid;gap:6px;text-decoration:none;color:var(--fg);border:1px solid var(--line);background:var(--bg-2);border-radius:16px;padding:16px;transition:border-color .2s}
+.series a:hover{border-color:var(--red)}
+.series a.here{border-color:var(--red);background:rgba(224,36,43,.08)}
+.series small{font:600 11.5px var(--body);letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}
+.series b{font:italic 700 26px/1 var(--display);text-transform:uppercase}
+.series span{font-size:13.5px;color:var(--muted)}
+footer{margin-top:64px;padding-top:20px;border-top:1px solid var(--line);font-size:13.5px;color:var(--dim)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><symbol id="i-garage" viewBox="0 0 24 24"><path d="M3 21V9l9-6 9 6v12"/><path d="M7 21v-7h10v7M7 17h10"/></symbol><symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"/></symbol><symbol id="i-phone" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></symbol><symbol id="i-gift" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8s1-5 4.5-5a2.5 2.5 0 0 1 0 5"/></symbol><symbol id="i-edit" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></symbol><symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></symbol><symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></symbol><symbol id="i-doc" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h6"/></symbol><symbol id="i-logout" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></symbol><symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6"/></symbol><symbol id="i-apple-id" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></symbol><symbol id="i-cake" viewBox="0 0 24 24"><path d="M20 21v-8a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8M4 16s.5-1 2-1 2.5 2 4 2 2.5-2 4-2 2.5 2 4 2 2-1 2-1M2 21h20M7 8v3M12 8v3M17 8v3M7 4h.01M12 4h.01M17 4h.01"/></symbol><symbol id="i-message" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></symbol><symbol id="i-nav" viewBox="0 0 24 24"><path d="M3 11 22 2l-9 19-2-8-8-2z"/></symbol><symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol><symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol><symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol><symbol id="i-camera" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></symbol><symbol id="i-wrench" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></symbol><symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol><symbol id="i-spin" viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 1-15.5 6.2M3 12a9 9 0 0 1 15.5-6.2M18.5 2v4h-4M5.5 22v-4h4"/></symbol><symbol id="i-star" viewBox="0 0 24 24"><path d="m12 2 3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></symbol><symbol id="i-alert" viewBox="0 0 24 24"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></symbol><symbol id="i-chev" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol><symbol id="i-back" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol><symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol><symbol id="i-car" viewBox="0 0 24 24"><path d="M5 17H3v-4l2-5.5A2 2 0 0 1 6.9 6h10.2a2 2 0 0 1 1.9 1.5L21 13v4h-2M9 17h6M3 13h18"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></symbol><symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol><symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></symbol><symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol><symbol id="i-cardb" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h4"/></symbol></defs></svg>
+
+<div class="wrap">
+<header class="top">
+  <p class="eyebrow">Garage Full Throttle · customer app · design proposal 5 of 5</p>
+  <h1>Profile <em>refresh</em></h1>
+  <p class="lede">The last tab, done the same way. Profile today is three links and a log-out button, with four sub-screens behind it: Edit profile, My vehicles, Notifications and Contact. The new version puts the customer's name, tier and cars up front, makes each sub-screen useful, and adds the account controls the app stores expect. The phone mockup is clickable: tap the tiles and rows to move between screens.</p>
+  <div class="brief">
+    <span class="kept"><b>Kept:</b> 306 Hume Hwy, Craigieburn · (03) 9305 6198</span>
+    <span class="kept"><b>Kept:</b> Mon–Fri 8:30–5:30 · Sat 9:00–2:30 · Sun closed</span>
+    <span class="kept"><b>Kept:</b> name, mobile and birthday fields</span>
+  </div>
+</header>
+
+<section id="tab" aria-labelledby="h-tab">
+  <div class="sec-head">
+    <p class="eyebrow">01 · The new Profile tab</p>
+    <h2 id="h-tab">Your account, your cars, your garage</h2>
+    <p>Pick a screen below or tap around inside the phone. Switch between a Tier 1 member and a brand-new sign-up. Every name, number and car in the mockup is an example.</p>
+  </div>
+  <div class="controls">
+    <div class="ctl"><span>Screen</span>
+      <div class="seg" id="seg-screen">
+        <button type="button" id="sc-home" data-screen="home" aria-pressed="true">Profile</button>
+        <button type="button" id="sc-edit" data-screen="edit" aria-pressed="false">Edit profile</button>
+        <button type="button" id="sc-garage" data-screen="garage" aria-pressed="false">My garage</button>
+        <button type="button" id="sc-notif" data-screen="notif" aria-pressed="false">Notifications</button>
+        <button type="button" id="sc-prefs" data-screen="prefs" aria-pressed="false">Notification settings</button>
+        <button type="button" id="sc-contact" data-screen="contact" aria-pressed="false">Contact</button>
+      </div>
+    </div>
+    <div class="ctl"><span>Customer</span>
+      <div class="seg" id="seg-state">
+        <button type="button" id="st-t1" data-state="t1" aria-pressed="true">Member · Tier 1</button>
+        <button type="button" id="st-new" data-state="new" aria-pressed="false">Brand-new sign-up</button>
+      </div>
+    </div>
+    <div class="ctl"><span>Background</span>
+      <div class="seg" id="seg-bg">
+        <button type="button" id="bg-carbon" data-bg="carbon" aria-pressed="true">Carbon + tail-light</button>
+        <button type="button" id="bg-glow" data-bg="glow" aria-pressed="false">Glow</button>
+        <button type="button" id="bg-tread" data-bg="tread" aria-pressed="false">Tread</button>
+        <button type="button" id="bg-contour" data-bg="contour" aria-pressed="false">Contour</button>
+        <button type="button" id="bg-streaks" data-bg="streaks" aria-pressed="false">Speed lines</button>
+      </div>
+    </div>
+    <div class="ctl"><span>Markers</span>
+      <div class="seg"><button type="button" id="mk-toggle" aria-pressed="true">Show numbers</button></div>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div class="phone-col">
+      <div class="phone" id="phone">
+        <div class="screen bgfx" id="screen" data-bg="carbon">
+          <div class="sb"><span>9:41</span>
+            <span class="ic" aria-hidden="true">
+              <svg width="18" height="11" viewBox="0 0 18 11"><rect x="0" y="7" width="3" height="4" rx="1" fill="#fff"/><rect x="5" y="5" width="3" height="6" rx="1" fill="#fff"/><rect x="10" y="2.5" width="3" height="8.5" rx="1" fill="#fff"/><rect x="15" y="0" width="3" height="11" rx="1" fill="#fff" opacity=".35"/></svg>
+              <svg width="24" height="12" viewBox="0 0 24 12"><rect x=".5" y=".5" width="20" height="11" rx="3" fill="none" stroke="#fff" opacity=".5"/><rect x="2" y="2" width="14" height="8" rx="1.6" fill="#fff"/><rect x="21.5" y="4" width="1.6" height="4" rx=".8" fill="#fff" opacity=".5"/></svg>
+            </span>
+          </div>
+
+          <!-- ============ PROFILE HOME ============ -->
+          <div class="view" data-view="home">
+            <div class="ph-head">
+              <div class="chip-pts"><span class="coin">P</span><span class="js-pts">640</span> pts</div>
+              <div class="wordmark">Full <i>Throttle</i><small>GARAGE</small></div>
+              <button type="button" class="icbtn" data-nav="notif" aria-label="Notifications"><svg class="i" style="width:18px;height:18px"><use href="#i-bell"/></svg><span class="dot"></span></button>
+            </div>
+            <div class="pad">
+              <div class="card idc blk tap" data-nav="edit">
+                <span class="mk">1</span>
+                <div class="av js-av"></div>
+                <h5 class="js-name">Jordan Kelly</h5>
+                <div class="tierl js-tierl"><b>GFT Club · Tier 1</b><span>Member since Jan 2026</span></div>
+                <span class="editb"><svg class="i sm"><use href="#i-edit"/></svg>Edit</span>
+                <div class="stats">
+                  <div><b class="js-s1">640</b>points</div>
+                  <div><b class="js-s2">4</b>visits</div>
+                  <div><b class="js-s3">2</b>cars</div>
+                </div>
+              </div>
+
+              <div class="card complete blk tap" data-s="new" data-nav="edit" hidden>
+                <span class="mk">2</span>
+                <svg class="ring" viewBox="0 0 52 52"><circle cx="26" cy="26" r="21" fill="none" stroke="#2e2e35" stroke-width="6"/><circle cx="26" cy="26" r="21" fill="none" stroke="#F5A524" stroke-width="6" stroke-linecap="round" stroke-dasharray="52.8 132" transform="rotate(-90 26 26)"/><text x="26" y="31" text-anchor="middle" font-size="13" font-weight="700" fill="#fff" font-family="-apple-system,Segoe UI,Arial">40%</text></svg>
+                <div><b>Finish your profile</b><small>So the garage knows who's calling, and when your birthday is.</small>
+                  <div class="chips"><span class="ok">✓ Signed in</span><span>Name</span><span>Mobile</span><span>Birthday</span></div></div>
+              </div>
+
+              <div class="lbl"><span>Shortcuts</span></div>
+              <div class="tiles blk">
+                <span class="mk">3</span>
+                <button type="button" class="tl" data-nav="garage"><span class="ic"><svg class="i"><use href="#i-garage"/></svg></span><span><b>My garage</b><small class="js-g-sub">2 cars · Ranger service soon</small></span></button>
+                <button type="button" class="tl" data-nav="notif"><span class="badge js-badge">3</span><span class="ic"><svg class="i"><use href="#i-bell"/></svg></span><span><b>Notifications</b><small class="js-n-sub">3 new</small></span></button>
+                <button type="button" class="tl" data-nav="contact"><span class="ic"><svg class="i"><use href="#i-phone"/></svg></span><span><b>Contact</b><small><i class="dotc js-dot"></i><span class="js-open-short">Open · closes 5:30 pm</span></small></span></button>
+                <button type="button" class="tl"><span class="ic"><svg class="i"><use href="#i-gift"/></svg></span><span><b>Refer a mate</b><small>They get $20 off</small></span></button>
+              </div>
+
+              <div class="lbl"><span>Account</span></div>
+              <div class="list blk">
+                <span class="mk">4</span>
+                <div class="row" data-nav="edit"><span class="ic"><svg class="i"><use href="#i-edit"/></svg></span><span class="t">Personal details</span><svg class="i chev"><use href="#i-chev"/></svg></div>
+                <div class="row" data-nav="prefs"><span class="ic"><svg class="i"><use href="#i-settings"/></svg></span><span class="t">Notification settings</span><svg class="i chev"><use href="#i-chev"/></svg></div>
+                <div class="row"><span class="ic"><svg class="i"><use href="#i-apple-id"/></svg></span><span class="t">Sign-in method<br><small>Sign in with Apple</small></span><svg class="i chev"><use href="#i-chev"/></svg></div>
+                <div class="row"><span class="ic"><svg class="i"><use href="#i-doc"/></svg></span><span class="t">Terms, privacy &amp; spin rules</span><svg class="i chev"><use href="#i-chev"/></svg></div>
+                <div class="row"><span class="ic"><svg class="i"><use href="#i-logout"/></svg></span><span class="t">Log out</span></div>
+                <div class="row danger"><span class="ic"><svg class="i"><use href="#i-trash"/></svg></span><span class="t">Delete account</span></div>
+              </div>
+              <p class="ver">Garage Full Throttle · app version 1.0</p>
+            </div>
+          </div>
+
+          <!-- ============ EDIT ============ -->
+          <div class="view" data-view="edit" hidden>
+            <div class="subhead"><button type="button" class="icbtn" data-nav="home" aria-label="Back"><svg class="i"><use href="#i-back"/></svg></button><h4>Personal details</h4></div>
+            <div class="pad">
+              <div class="avedit"><div class="av js-av2"></div><small>Initials from your name. Tap to add a photo.</small></div>
+              <div class="form">
+                <div class="blk">
+                  <span class="mk" style="left:auto;right:-8px">5</span>
+                  <div class="two-f">
+                    <div class="f"><label>First name</label><div class="in js-fn">Jordan</div></div>
+                    <div class="f"><label>Last name</label><div class="in js-ln">Kelly</div></div>
+                  </div>
+                </div>
+                <div class="f"><label>Sign-in email</label><div class="in ro">Hidden by Apple<span class="pill">Private relay</span></div><span class="help">You chose to hide your email when you signed in with Apple. Messages still reach you.</span></div>
+                <div class="f"><label>Email for invoices (optional)</label><div class="in js-em">jordan@example.com</div></div>
+                <div class="f blk"><span class="mk" style="left:auto;right:-8px">6</span><label>Mobile</label><div class="in js-mob">0412 345 678</div><span class="help">Used for "car ready" calls. Australian mobile, 04xx xxx xxx.</span></div>
+                <div class="f"><label>Birthday</label><div class="in js-bd"><svg class="i sm" style="color:#ff6a6f"><use href="#i-cake"/></svg>14 March 1990</div><span class="help"><b>Birthday month treat</b><span class="sg">Suggested</span> Free wash &amp; wax in your birthday month.</span></div>
+              </div>
+              <div class="savebar"><span class="js-save off">Saved</span></div>
+            </div>
+          </div>
+
+          <!-- ============ GARAGE ============ -->
+          <div class="view" data-view="garage" hidden>
+            <div class="subhead"><button type="button" class="icbtn" data-nav="home" aria-label="Back"><svg class="i"><use href="#i-back"/></svg></button><h4>My garage</h4><span class="act js-g-count">2 cars</span></div>
+            <div class="pad">
+              <div data-s="t1">
+                <div class="card veh blk">
+                  <span class="mk">7</span>
+                  <div class="h"><div class="plate">1XY·2ZZ<small>VICTORIA</small></div><div><b>2019 Ford Ranger XLT</b><small>Diesel · 86,760 km</small></div></div>
+                  <div class="meter"><div class="l"><span>Next service</span><b>in 1,240 km</b></div><div class="bar"><i style="width:88%"></i></div></div>
+                  <div class="meter"><div class="l"><span>Rego renewal</span><b>in 23 days</b></div><div class="bar am"><i style="width:94%"></i></div></div>
+                  <div class="acts"><span><svg class="i sm"><use href="#i-cal"/></svg>Book</span><span><svg class="i sm"><use href="#i-doc"/></svg>History</span><span><svg class="i sm"><use href="#i-edit"/></svg>Edit</span></div>
+                </div>
+                <div class="card veh">
+                  <div class="h"><div class="plate">2GT·4RS<small>VICTORIA</small></div><div><b>2017 Toyota Corolla</b><small>Petrol · 54,120 km</small></div></div>
+                  <div class="meter"><div class="l"><span>Next service</span><b>in about 3 weeks</b></div><div class="bar"><i style="width:80%"></i></div></div>
+                  <div class="meter"><div class="l"><span>Rego renewal</span><b>in 7 months</b></div><div class="bar gr"><i style="width:40%"></i></div></div>
+                  <div class="acts"><span><svg class="i sm"><use href="#i-cal"/></svg>Book</span><span><svg class="i sm"><use href="#i-doc"/></svg>History</span><span><svg class="i sm"><use href="#i-edit"/></svg>Edit</span></div>
+                </div>
+              </div>
+              <div data-s="new" hidden>
+                <div class="empty"><svg width="240" height="130" viewBox="0 0 240 130" role="img" aria-label="An empty garage bay">
+<defs><radialGradient id="eg" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#E0242B" stop-opacity=".4"/><stop offset="1" stop-color="#E0242B" stop-opacity="0"/></radialGradient></defs>
+<ellipse cx="120" cy="118" rx="96" ry="10" fill="url(#eg)"/>
+<path d="M30 118V46l90-34 90 34v72" fill="#141416" stroke="#3A3A42" stroke-width="2" stroke-linejoin="round"/>
+<path d="M54 118V64h132v54" fill="#0E0E10" stroke="#3A3A42" stroke-width="2"/>
+<g stroke="#26262B" stroke-width="2"><line x1="54" y1="74" x2="186" y2="74"/><line x1="54" y1="84" x2="186" y2="84"/></g>
+<path d="M120 92v18M111 101h18" stroke="#E0242B" stroke-width="4" stroke-linecap="round"/>
+<line x1="20" y1="118" x2="220" y2="118" stroke="#3A3A42" stroke-width="2" stroke-linecap="round"/>
+<rect x="96" y="30" width="48" height="12" rx="2" fill="#E0242B"/>
+<text x="120" y="39.5" text-anchor="middle" font-family="Barlow Condensed, Arial Narrow, Arial, sans-serif" font-style="italic" font-weight="700" font-size="10" fill="#FFFFFF" letter-spacing=".5">GFT</text>
+</svg><b>Park your first car</b><p>Add it once. We'll remind you about services and rego.</p></div>
+              </div>
+              <div class="card addcar blk" style="margin-top:4px">
+                <span class="mk">8</span>
+                <b>Add a car by rego</b>
+                <div class="look"><div class="in">ABC123</div><div class="st">VIC</div></div>
+                <div class="found"><svg class="i" style="color:#5fe08f"><use href="#i-check"/></svg><div><b>2021 Mazda CX-5 Maxx Sport</b><small>Found from the rego (example)</small></div></div>
+                <span class="go">Add this car</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- ============ NOTIFICATIONS ============ -->
+          <div class="view" data-view="notif" hidden>
+            <div class="subhead"><button type="button" class="icbtn" data-nav="home" aria-label="Back"><svg class="i"><use href="#i-back"/></svg></button><h4>Notifications</h4><button type="button" class="act" id="markall">Mark all read</button><button type="button" class="icbtn" data-nav="prefs" aria-label="Notification settings"><svg class="i" style="width:18px;height:18px"><use href="#i-settings"/></svg></button></div>
+            <div class="pad">
+              <div class="blk" id="inbox"><span class="mk" style="left:auto;right:-8px;top:10px">9</span></div>
+            </div>
+          </div>
+
+          <!-- ============ PREFS ============ -->
+          <div class="view" data-view="prefs" hidden>
+            <div class="subhead"><button type="button" class="icbtn" data-nav="notif" aria-label="Back"><svg class="i"><use href="#i-back"/></svg></button><h4>Notification settings</h4></div>
+            <div class="pad">
+              <div class="card prefs blk" style="margin-top:8px">
+                <span class="mk">10</span>
+                <div class="pr"><div class="t"><b>Job updates</b><small>Booking confirmed, extra work, car ready. Always on while a job is open.</small></div><button type="button" class="sw lockd" role="switch" aria-checked="true" aria-label="Job updates" disabled></button></div>
+                <div class="pr"><div class="t"><b>Service &amp; rego reminders</b><small>A week before each is due</small></div><button type="button" class="sw" role="switch" aria-checked="true" aria-label="Service and rego reminders"></button></div>
+                <div class="pr"><div class="t"><b>Weekly spins</b><small>Monday, when your 3 spins reset</small></div><button type="button" class="sw" role="switch" aria-checked="true" aria-label="Weekly spins"></button></div>
+                <div class="pr"><div class="t"><b>Points &amp; tier</b><small>Points added, new tier unlocked</small></div><button type="button" class="sw" role="switch" aria-checked="true" aria-label="Points and tier"></button></div>
+                <div class="pr"><div class="t"><b>Deals &amp; offers</b><small>Off until you turn it on. Max 2 a month.</small></div><button type="button" class="sw" role="switch" aria-checked="false" aria-label="Deals and offers"></button></div>
+              </div>
+              <div class="lbl"><span>Quiet hours</span></div>
+              <div class="card prefs">
+                <div class="pr"><div class="t"><b>9:00 pm – 8:00 am</b><small>Nothing except your car being ready</small></div><button type="button" class="sw" role="switch" aria-checked="true" aria-label="Quiet hours"></button></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ============ CONTACT ============ -->
+          <div class="view" data-view="contact" hidden>
+            <div class="subhead"><button type="button" class="icbtn" data-nav="home" aria-label="Back"><svg class="i"><use href="#i-back"/></svg></button><h4>Contact</h4></div>
+            <div class="pad">
+              <div class="card gcard blk" style="margin-top:8px">
+                <span class="mk">11</span>
+                <h5>Garage Full Throttle</h5>
+                <div class="addr"><span>306 Hume Hwy, Craigieburn VIC 3064</span><button type="button" id="copyaddr"><svg class="i sm" style="width:12px;height:12px"><use href="#i-copy"/></svg>Copy</button></div>
+                <div class="tel">(03) 9305 6198</div>
+                <span class="status open js-status"><i></i><span class="js-open-long">Open now · closes 5:30 pm</span></span>
+              </div>
+              <div class="blk">
+                <span class="mk" style="top:4px">12</span>
+                <div class="mapc"><svg width="340" height="150" viewBox="0 0 340 150" role="img" aria-label="Schematic map with a pin on the Hume Highway">
+<rect width="340" height="150" fill="#141417"/>
+<g stroke="#23232A" stroke-width="10" stroke-linecap="round"><path d="M-10 40 H350"/><path d="M-10 112 H350"/><path d="M60 -10 V160"/><path d="M262 -10 V160"/></g>
+<g stroke="#1C1C22" stroke-width="5"><path d="M-10 76 H150"/><path d="M220 76 H350"/><path d="M110 -10 V40"/><path d="M300 112 V160"/></g>
+<path d="M150 -10 C170 40 175 90 200 160" fill="none" stroke="#3A1013" stroke-width="18" stroke-linecap="round"/>
+<path d="M150 -10 C170 40 175 90 200 160" fill="none" stroke="#E0242B" stroke-width="5" stroke-linecap="round" stroke-dasharray="1 0"/>
+<text x="196" y="30" font-family="Barlow, Arial, sans-serif" font-weight="700" font-size="10" letter-spacing="1.5" fill="#FF8A8E">HUME HWY</text>
+<g transform="translate(173 70)"><ellipse cx="0" cy="16" rx="12" ry="4" fill="#000" opacity=".5"/>
+<path d="M0 14 C-4 6 -12 0 -12 -8 A12 12 0 1 1 12 -8 C12 0 4 6 0 14Z" fill="#FFFFFF"/><circle cx="0" cy="-8" r="5.5" fill="#E0242B"/></g>
+<rect x="8" y="124" width="120" height="18" rx="9" fill="#0B0B0D" fill-opacity=".8"/>
+<text x="68" y="136.5" text-anchor="middle" font-family="Barlow, Arial, sans-serif" font-size="9.5" fill="#A1A1AA">Schematic · use a real map</text>
+</svg></div>
+                <div class="cacts">
+                  <div><span class="c"><svg class="i lg"><use href="#i-phone"/></svg></span>Call</div>
+                  <div><span class="c"><svg class="i lg"><use href="#i-message"/></svg></span>Message</div>
+                  <div><span class="c"><svg class="i lg"><use href="#i-nav"/></svg></span>Directions</div>
+                  <div><span class="c"><svg class="i lg"><use href="#i-cal"/></svg></span>Book</div>
+                </div>
+              </div>
+              <div class="lbl"><span>Hours</span></div>
+              <div class="card hours" id="hours">
+                <div class="hr" data-d="1-5"><span>Mon–Fri</span><span>8:30 am – 5:30 pm</span></div>
+                <div class="hr" data-d="6"><span>Sat</span><span>9:00 am – 2:30 pm</span></div>
+                <div class="hr" data-d="0"><span>Sun</span><span>Closed</span></div>
+                <p class="ph">Public holiday hours may differ. We'll post changes here.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="tabs" aria-hidden="true">
+            <div><svg class="i lg"><use href="#i-home"/></svg>Home</div>
+            <div><svg class="i lg"><use href="#i-cal"/></svg>Appointment</div>
+            <div><svg class="i lg"><use href="#i-cardb"/></svg>Membership</div>
+            <div><svg class="i lg"><use href="#i-spin"/></svg>Spin</div>
+            <div class="on"><svg class="i lg"><use href="#i-user"/></svg>Profile</div>
+          </div>
+          <span class="homebar"></span>
+        </div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li class="grp">Profile <button type="button" data-go="home">Show</button></li>
+      <li class="note hl"><span class="num">1</span>
+        <h3>Who you are, at a glance <span class="effort e1">Small</span></h3>
+        <p class="from">Replaces: <b>"4J" and the private relay email address</b></p>
+        <p class="d">Real name, initials, a ring in the customer's tier colour with the tier number, and three numbers: points, visits, cars. Tapping the card opens Personal details.</p>
+      </li>
+      <li class="note"><span class="num">2</span>
+        <h3>"Finish your profile" for new customers <span class="effort e1">Small</span></h3>
+        <p class="from">GFT addition</p>
+        <p class="d">Sign in with Apple can hide the real name and email, which is why the profile shows a code. A progress ring shows what's missing (name, mobile, birthday) until it's done. Switch to "Brand-new sign-up" to see it.</p>
+      </li>
+      <li class="note"><span class="num">3</span>
+        <h3>Shortcut tiles with live info <span class="effort e1">Small</span></h3>
+        <p class="from">Replaces: <b>three plain list rows</b></p>
+        <p class="d">My garage shows car count and what's due. Notifications shows the unread count. Contact shows whether the garage is open right now, worked out from the real hours in Melbourne time. Refer a mate links to the referral offer.</p>
+      </li>
+      <li class="note hl"><span class="num">4</span>
+        <h3>Account settings, including Delete account <span class="effort e2">Medium</span></h3>
+        <p class="from">Replaces: <b>a lone Log out button</b></p>
+        <p class="d">Personal details, notification settings, sign-in method, terms and privacy, log out, and a Delete account option. Apple requires apps that let people create an account to also let them delete it in the app (see section 02).</p>
+      </li>
+
+      <li class="grp">Edit profile <button type="button" data-go="edit">Show</button></li>
+      <li class="note"><span class="num">5</span>
+        <h3>Real names, honest email <span class="effort e1">Small</span></h3>
+        <p class="from">Replaces: <b>a random relay code as the name, and the relay address in grey</b></p>
+        <p class="d">First and last name fields. The Apple relay email is shown as "Hidden by Apple" with a short explanation, plus an optional email for invoices. "Profile picture cannot be changed" becomes initials from the name, with photo upload as an option.</p>
+      </li>
+      <li class="note"><span class="num">6</span>
+        <h3>Mobile, birthday and a save bar <span class="effort e1">Small</span></h3>
+        <p class="from">Replaces: <b>plain text fields and a refresh button</b></p>
+        <p class="d">The mobile number is formatted as you type (0412 345 678). The birthday is shown as "14 March 1990", so there's no 05/07 day-or-month confusion. The app already asks for the birthday, so give it a purpose: a birthday-month treat (suggested). Save stays pinned and only lights up when something has changed.</p>
+      </li>
+
+      <li class="grp">My garage <button type="button" data-go="garage">Show</button></li>
+      <li class="note"><span class="num">7</span>
+        <h3>Car cards with what's due <span class="effort e2">Medium</span></h3>
+        <p class="from">Replaces: <b>"No vehicles for now" and a small Add button</b></p>
+        <p class="d">The same car card as on Home: plate, model, odometer, next service and rego bars, plus Book, History and Edit. New customers see an empty garage illustration instead of a blank list.</p>
+      </li>
+      <li class="note"><span class="num">8</span>
+        <h3>Add a car by its rego <span class="effort e3">Large</span></h3>
+        <p class="from">Upgrade of: <b>the Add form</b></p>
+        <p class="d">Type the plate, pick the state, and the make, model and year fill in automatically. This needs a paid vehicle lookup service. Without one, the same screen works with a short manual form.</p>
+      </li>
+
+      <li class="grp">Notifications <button type="button" data-go="notif">Show</button></li>
+      <li class="note"><span class="num">9</span>
+        <h3>An inbox with types and times <span class="effort e2">Medium</span></h3>
+        <p class="from">Replaces: <b>"No notifications yet" and a faded "Mark all read"</b></p>
+        <p class="d">Grouped by Today, Yesterday and Earlier, with a coloured icon for each kind: job status, extra work, spins, rego, tier. Unread items have a red dot. "Mark all read" works and looks like a button (try it).</p>
+      </li>
+      <li class="note"><span class="num">10</span>
+        <h3>Notification settings <span class="effort e2">Medium</span></h3>
+        <p class="from">GFT addition</p>
+        <p class="d">Customers choose what they get. Job updates stay on while a job is open. Deals and offers are off until the customer turns them on. Quiet hours hold everything overnight except "your car is ready".</p>
+        <button type="button" class="see" style="grid-column:2;font:600 12.5px var(--body);color:var(--red-hot);background:none;border:0;padding:0;cursor:pointer;justify-self:start" data-go="prefs">Show settings</button>
+      </li>
+
+      <li class="grp">Contact <button type="button" data-go="contact">Show</button></li>
+      <li class="note"><span class="num">11</span>
+        <h3>Open now, or when it opens <span class="effort e1">Small</span></h3>
+        <p class="from">Upgrade of: <b>address, phone and an hours table</b></p>
+        <p class="d">Same real details, plus a live status: "Open now · closes 5:30 pm" or "Closed · opens Mon 8:30 am", worked out in Melbourne time. Today's row in the hours table is highlighted, the address has a Copy button, and there's a public holiday note.</p>
+      </li>
+      <li class="note"><span class="num">12</span>
+        <h3>Map and four actions <span class="effort e1">Small</span></h3>
+        <p class="from">Replaces: <b>three large buttons</b></p>
+        <p class="d">A small map with a pin, then Call, Message, Directions and Book in one row. The map in the mockup is a schematic. In the app, use a real map that opens Apple Maps or Google Maps.</p>
+      </li>
+    </ol>
+  </div>
+</section>
+
+<section id="rules" aria-labelledby="h-rules">
+  <div class="sec-head">
+    <p class="eyebrow">02 · Account rules before launch</p>
+    <h2 id="h-rules">What the stores and customers expect</h2>
+    <p>Checks to make before submitting the update. This isn't legal advice; confirm the details for the garage.</p>
+  </div>
+  <div class="rules">
+    <div><b>Delete account in the app</b><span>Apple's App Store guidelines (5.1.1) require apps that support account creation to let people start deleting their account from inside the app. Google Play has a similar requirement. Explain what's kept (for example invoices the garage must keep) and what's removed.</span></div>
+    <div><b>Emailing Apple relay addresses</b><span>Customers who hide their email get an address ending in privaterelay.appleid.com. Emails sent to it only arrive if the garage's sending domain is registered with Apple's private email relay service. Otherwise invoices and receipts disappear.</span></div>
+    <div><b>Say why you collect a birthday</b><span>Birthday and mobile are personal information. The privacy policy should say what they're used for (for example a birthday treat and "car ready" calls) and the app should link to it.</span></div>
+    <div><b>Marketing stays opt-in</b><span>Keep deals and offers separate from job updates and off by default. Customers will trust job notifications more if they're never mixed with promotions.</span></div>
+  </div>
+</section>
+
+<section id="fixes" aria-labelledby="h-fix">
+  <div class="sec-head">
+    <p class="eyebrow">03 · What changes from today</p>
+    <h2 id="h-fix">Problems with the current tab</h2>
+  </div>
+  <div class="two">
+    <div class="skip">
+      <div><b>The customer's name is a code</b><span>With Sign in with Apple, the name and avatar become a random relay ID like "4J…". Asking for a first and last name fixes the Profile, Home greeting and every notification (1, 5).</span></div>
+      <div><b>Negative or dead-end text</b><span>"Profile picture cannot be changed", "No vehicles for now" and "No notifications yet" each tell the customer what they can't do. Each one becomes a next step (5, 7, 9).</span></div>
+      <div><b>Mark all read looks disabled</b><span>It's dark red on black, so it reads as greyed out (9).</span></div>
+      <div><b>Hours without an answer</b><span>The hours are there, but the customer still has to work out if the garage is open now (11).</span></div>
+      <div><b>Refresh buttons on sub-screens</b><span>As on every tab, pull to refresh replaces them.</span></div>
+      <div><b>No delete account or settings</b><span>Only Log out. App review will ask about account deletion (4).</span></div>
+    </div>
+    <figure class="today">
+      <img src="assets/images/current-profile-email-blurred.jpg" alt="Current Profile tab: avatar with initials 4J and a blurred relay email, three rows for My vehicles, Notifications and Contact the garage, and a Log out button.">
+      <figcaption>Profile tab today, email blurred.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section id="build" aria-labelledby="h-build">
+  <div class="sec-head">
+    <p class="eyebrow">04 · Build order</p>
+    <h2 id="h-build">Ship it in three drops</h2>
+  </div>
+  <div class="phases">
+    <div class="phase">
+      <h3><span class="ph">Phase 1</span> · Must-haves</h3>
+      <p class="tagline">About 1–2 weeks.</p>
+      <ul>
+        <li>First and last name, profile card (1, 5)</li>
+        <li>Delete account (4)</li>
+        <li>Live open status, Copy address, today's hours (11)</li>
+        <li>Mobile and birthday formatting, save bar (6)</li>
+      </ul>
+      <p class="needs"><b>Needs:</b> an account deletion process; the sending domain registered for Apple relay email.</p>
+    </div>
+    <div class="phase">
+      <h3><span class="ph">Phase 2</span> · Garage and inbox</h3>
+      <p class="tagline">About 2–3 weeks.</p>
+      <ul>
+        <li>Car cards with service and rego bars (7)</li>
+        <li>Notification inbox with types (9)</li>
+        <li>Notification settings and quiet hours (10)</li>
+        <li>Shortcut tiles, finish-your-profile card (2, 3)</li>
+      </ul>
+      <p class="needs"><b>Needs:</b> odometer and rego-expiry fields; notification categories on the server.</p>
+    </div>
+    <div class="phase">
+      <h3><span class="ph">Phase 3</span> · Nice to have</h3>
+      <p class="tagline">About 1–2 weeks.</p>
+      <ul>
+        <li>Add a car by rego lookup (8)</li>
+        <li>Profile photo upload</li>
+        <li>Map preview (12)</li>
+        <li>Birthday-month treat, if approved</li>
+      </ul>
+      <p class="needs"><b>Needs:</b> a vehicle lookup provider; a maps SDK key.</p>
+    </div>
+  </div>
+</section>
+
+<section id="series" aria-labelledby="h-series">
+  <div class="sec-head">
+    <p class="eyebrow">05 · The full set</p>
+    <h2 id="h-series">All five tabs</h2>
+    <p>Each proposal uses the same header, backgrounds, colours and build approach, so they can be built together.</p>
+  </div>
+  <div class="series">
+    <a href="https://claude.ai/artifact/WijJoatcNDTDr8ABJCLYmA" target="_blank" rel="noopener"><small>1 · Home</small><b>Home</b><span>Points chip, promo carousel, quick actions, car card, backgrounds</span></a>
+    <a href="https://claude.ai/artifact/Ft4WHYjHPB5ALpKhk1kHQS" target="_blank" rel="noopener"><small>2 · Appointment</small><b>Appointments</b><span>Live job card, extra-work approval, logbook, booking flow</span></a>
+    <a href="https://claude.ai/artifact/4cLAzaabg32x84HUjvD2Xs" target="_blank" rel="noopener"><small>3 · Membership</small><b>Membership</b><span>Club cards, tier track, join calculator, member area</span></a>
+    <a href="https://claude.ai/artifact/2FSkrfTQh7Pr1FpqV4oVUJ" target="_blank" rel="noopener"><small>4 · Spin</small><b>Spin</b><span>Tyre wheel, prize wallet, rules and odds</span></a>
+    <a class="here" href="#tab"><small>5 · Profile</small><b>Profile</b><span>This page</span></a>
+  </div>
+</section>
+
+<footer>Prepared for Garage Full Throttle. The garage's address, phone number and opening hours are taken from the current app. Customer names, numbers, birthdays, cars and notifications in the mockup are examples, not real customer data.</footer>
+</div>
+
+<script>
+(function(){
+  var screen=document.getElementById('screen'), phone=document.getElementById('phone');
+  var AV={t1:'<svg width="96" height="96" viewBox="0 0 96 96"><circle cx="48" cy="48" r="42" fill="#1C1C20" stroke="#E0242B" stroke-width="4"/><text x="48" y="58" text-anchor="middle" font-family="Barlow, Arial, sans-serif" font-weight="700" font-size="28" fill="#FFFFFF">JK</text><circle cx="78" cy="78" r="13" fill="#E0242B" stroke="#0B0B0D" stroke-width="3"/><text x="78" y="83.5" text-anchor="middle" font-family="Barlow Condensed, Arial Narrow, Arial, sans-serif" font-style="italic" font-weight="700" font-size="15" fill="#FFFFFF">1</text></svg>', none:'<svg width="96" height="96" viewBox="0 0 96 96"><circle cx="48" cy="48" r="42" fill="#1C1C20" stroke="#55555D" stroke-width="4" stroke-dasharray="6 5"/><g transform="translate(30 28) scale(1.5)" fill="none" stroke="#A1A1AA" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></g></svg>'};
+  var state='t1', view='home';
+
+  /* ---------- live open status, Melbourne time ---------- */
+  var HOURS={1:[510,1050],2:[510,1050],3:[510,1050],4:[510,1050],5:[510,1050],6:[540,870],0:null};
+  var DN=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  function t(m){var h=Math.floor(m/60),mm=m%60,ap=h>=12?'pm':'am';h=h%12||12;return h+(mm?':'+String(mm).padStart(2,'0'):'')+' '+ap;}
+  function melb(){
+    try{
+      var parts=new Intl.DateTimeFormat('en-AU',{timeZone:'Australia/Melbourne',weekday:'short',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(new Date());
+      var o={}; parts.forEach(function(p){o[p.type]=p.value;});
+      return {d:DN.indexOf(o.weekday), m:(+o.hour)*60+(+o.minute)};
+    }catch(e){ var n=new Date(); return {d:n.getDay(), m:n.getHours()*60+n.getMinutes()}; }
+  }
+  function openStatus(){
+    var now=melb(), h=HOURS[now.d];
+    if(h && now.m>=h[0] && now.m<h[1]) return {open:true, long:'Open now · closes '+t(h[1]), short:'Open · closes '+t(h[1]), d:now.d};
+    if(h && now.m<h[0]) return {open:false, long:'Closed · opens today '+t(h[0]), short:'Opens '+t(h[0]), d:now.d};
+    for(var k=1;k<=7;k++){ var d=(now.d+k)%7; if(HOURS[d]){ var lab=k===1?'tomorrow':DN[d]; return {open:false, long:'Closed · opens '+lab+' '+t(HOURS[d][0]), short:'Opens '+lab+' '+t(HOURS[d][0]), d:now.d}; } }
+  }
+  function renderOpen(){
+    var s=openStatus();
+    document.querySelector('.js-open-long').textContent=s.long;
+    document.querySelector('.js-open-short').textContent=s.short;
+    var st=document.querySelector('.js-status'); st.className='status '+(s.open?'open':'closed')+' js-status';
+    document.querySelector('.js-dot').className='dotc js-dot'+(s.open?'':' closed');
+    document.querySelectorAll('#hours .hr').forEach(function(r){
+      var dd=r.dataset.d, on = dd==='1-5' ? (s.d>=1&&s.d<=5) : (+dd===s.d);
+      r.classList.toggle('today',on);
+    });
+  }
+
+  /* ---------- notifications ---------- */
+  var IN={
+    t1:[['Today',[['k-job','check','Your Ranger is ready','Total $610.20. Open until 5:30 pm. Pay in the app to skip the queue.','2:24 pm',1],
+                  ['k-extra','alert','Extra work approved','Front brake pads, $289. Still on track for 2:30 pm.','10:02 am',0]]],
+        ['Yesterday',[['k-spin','spin','3 new spins','Your weekly spins have reset. Good luck!','Mon',1]]],
+        ['Earlier',[['k-rego','car','Rego due in 23 days','2019 Ford Ranger · 1XY·2ZZ','Fri',1],
+                    ['k-tier','star','Welcome to GFT Club','You’re Tier 1: 10% off every service.','Jan',0]]]],
+    new:[['Today',[['k-tier','star','Welcome to Full Throttle','You have 20 points to start. Finish your profile and add your car.','9:12 am',1],
+                   ['k-spin','spin','3 spins waiting','Try the prize wheel on the Spin tab.','9:12 am',1]]]]
+  };
+  function renderInbox(){
+    var box=document.getElementById('inbox'), mk=box.querySelector('.mk').outerHTML, h=mk;
+    IN[state].forEach(function(g){
+      h+='<div class="ngrp">'+g[0]+'</div><div class="list" style="padding:0 14px">';
+      g[1].forEach(function(n){
+        h+='<div class="nt'+(n[5]?'':' read')+'"><span class="ic '+n[0]+'"><svg class="i"><use href="#i-'+n[1]+'"/></svg></span><b>'+n[2]+'</b><time>'+n[4]+(n[5]?'<i class="u"></i>':'')+'</time><p>'+n[3]+'</p></div>';
+      });
+      h+='</div>';
+    });
+    box.innerHTML=h;
+    var unread=0; IN[state].forEach(function(g){g[1].forEach(function(n){unread+=n[5];});});
+    var b=document.querySelector('.js-badge'); b.textContent=unread; b.hidden=!unread;
+    document.querySelector('.js-n-sub').textContent=unread?unread+' new':'All read';
+    document.querySelector('.ph-head .dot').hidden=!unread;
+  }
+  document.getElementById('markall').addEventListener('click',function(){ IN[state].forEach(function(g){g[1].forEach(function(n){n[5]=0;});}); renderInbox(); });
+
+  /* ---------- state ---------- */
+  var ST={
+    t1:{pts:'640',name:'Jordan Kelly',tier:'<b>GFT Club · Tier 1</b><span>Member since Jan 2026</span>',s:['640','4','2'],gsub:'2 cars · Ranger service soon',gcount:'2 cars',
+        fn:'Jordan',ln:'Kelly',em:'jordan@example.com',mob:'0412 345 678',bd:'14 March 1990',save:'Saved',saveOff:true},
+    new:{pts:'20',name:'Add your name',tier:'<span>Not a member yet</span><b>Join GFT Club</b>',s:['20','0','0'],gsub:'Add your first car',gcount:'0 cars',
+        fn:'',ln:'',em:'',mob:'',bd:'',save:'Save details',saveOff:false}
+  };
+  function setIn(sel,val,ph){ var e=document.querySelector(sel); var ic=e.querySelector('svg'); e.textContent=val||ph; if(ic&&val) e.prepend(ic); e.classList.toggle('ph',!val); }
+  function render(){
+    var s=ST[state];
+    document.querySelectorAll('[data-s]').forEach(function(e){ e.hidden=e.getAttribute('data-s').split(' ').indexOf(state)<0; });
+    document.querySelector('.js-pts').textContent=s.pts;
+    var nm=document.querySelector('.js-name'); nm.textContent=s.name; nm.classList.toggle('miss',state==='new');
+    document.querySelector('.js-tierl').innerHTML=s.tier;
+    document.querySelector('.js-s1').textContent=s.s[0]; document.querySelector('.js-s2').textContent=s.s[1]; document.querySelector('.js-s3').textContent=s.s[2];
+    document.querySelector('.js-g-sub').textContent=s.gsub; document.querySelector('.js-g-count').textContent=s.gcount;
+    document.querySelector('.js-av').innerHTML=state==='new'?AV.none:AV.t1;
+    document.querySelector('.js-av2').innerHTML=state==='new'?AV.none:AV.t1;
+    setIn('.js-fn',s.fn,'First name'); setIn('.js-ln',s.ln,'Last name'); setIn('.js-em',s.em,'name@example.com');
+    setIn('.js-mob',s.mob,'04xx xxx xxx'); setIn('.js-bd',s.bd,'Add your birthday');
+    if(state==='new') document.querySelector('.js-fn').classList.add('focus'); else document.querySelector('.js-fn').classList.remove('focus');
+    var sv=document.querySelector('.js-save'); sv.textContent=s.save; sv.classList.toggle('off',s.saveOff);
+    document.querySelectorAll('#seg-state button').forEach(function(b){ b.setAttribute('aria-pressed',String(b.dataset.state===state)); });
+    renderInbox();
+  }
+  function go(v,anim){
+    view=v;
+    document.querySelectorAll('.view').forEach(function(e){ var on=e.dataset.view===v; e.hidden=!on; e.classList.remove('anim'); if(on&&anim){ void e.offsetWidth; e.classList.add('anim'); } });
+    document.querySelectorAll('#seg-screen button').forEach(function(b){ b.setAttribute('aria-pressed',String(b.dataset.screen===v)); });
+  }
+  document.getElementById('phone').addEventListener('click',function(e){
+    var n=e.target.closest('[data-nav]'); if(n){ go(n.dataset.nav,true); }
+  });
+  document.querySelectorAll('#seg-screen button').forEach(function(b){ b.addEventListener('click',function(){ go(b.dataset.screen,true); }); });
+  document.querySelectorAll('[data-go]').forEach(function(b){ b.addEventListener('click',function(){ go(b.dataset.go,true);
+    var top=phone.getBoundingClientRect().top; if(top<-120||top>window.innerHeight*0.6) phone.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'}); }); });
+  document.querySelectorAll('#seg-state button').forEach(function(b){ b.addEventListener('click',function(){ state=b.dataset.state; render(); }); });
+  document.querySelectorAll('.sw:not(.lockd)').forEach(function(s){ s.addEventListener('click',function(){ s.setAttribute('aria-checked',String(s.getAttribute('aria-checked')!=='true')); }); });
+  document.getElementById('copyaddr').addEventListener('click',function(){
+    var b=this, done=function(){ b.lastChild.textContent='Copied'; setTimeout(function(){b.lastChild.textContent='Copy';},1500); };
+    try{ navigator.clipboard.writeText('306 Hume Hwy, Craigieburn VIC 3064').then(done,done); }catch(e){ done(); }
+  });
+  document.querySelectorAll('#seg-bg button').forEach(function(b){ b.addEventListener('click',function(){
+    screen.setAttribute('data-bg',b.dataset.bg); document.querySelectorAll('#seg-bg button').forEach(function(x){ x.setAttribute('aria-pressed',String(x===b)); }); }); });
+  var mk=document.getElementById('mk-toggle');
+  mk.addEventListener('click',function(){ var on=mk.getAttribute('aria-pressed')!=='true'; mk.setAttribute('aria-pressed',String(on)); phone.classList.toggle('nomk',!on); });
+
+  render(); go('home',false); renderOpen(); setInterval(renderOpen,30000);
+})();
+</script>
+
+</body>
+</html>
