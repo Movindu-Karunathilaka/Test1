@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="375" height="812" viewBox="0 0 375 812">
+<defs>
+<pattern id="sl" width="120" height="40" patternUnits="userSpaceOnUse" patternTransform="rotate(28)">
+<rect x="38" y="0" width="1.4" height="40" fill="#E0242B" fill-opacity=".26"/>
+<rect x="83" y="0" width="1" height="40" fill="#FFFFFF" fill-opacity=".08"/>
+</pattern>
+<linearGradient id="dg" x1="1" y1="0" x2=".25" y2=".75"><stop offset="0" stop-color="#fff"/><stop offset=".5" stop-color="#fff" stop-opacity=".35"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+<mask id="diag" maskUnits="userSpaceOnUse" x="0" y="0" width="375" height="812"><rect width="375" height="812" fill="url(#dg)"/></mask>
+<radialGradient id="glow" gradientUnits="userSpaceOnUse" cx="375" cy="0" r="260" gradientTransform="translate(375 0) scale(1.01 1) translate(-375 0)">
+<stop offset="0" stop-color="#E0242B" stop-opacity=".3"/><stop offset=".7" stop-color="#E0242B" stop-opacity="0"/></radialGradient>
+</defs>
+<rect width="375" height="812" fill="#0B0B0D"/>
+<rect width="375" height="812" fill="url(#sl)" mask="url(#diag)"/>
+<rect width="375" height="812" fill="url(#glow)"/>
+</svg>

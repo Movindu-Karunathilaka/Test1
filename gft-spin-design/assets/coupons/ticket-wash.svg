@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="96" viewBox="0 0 300 96">
+<defs><mask id="m"><rect width="300" height="96" fill="#fff"/><circle cx="74" cy="0" r="8" fill="#000"/><circle cx="74" cy="96" r="8" fill="#000"/></mask>
+<linearGradient id="s" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FF4A50"/><stop offset="1" stop-color="#9E1419"/></linearGradient></defs>
+<g mask="url(#m)">
+<rect width="300" height="96" rx="14" fill="#1B1B1F"/>
+<rect width="74" height="96" fill="url(#s)"/>
+<rect x=".75" y=".75" width="298.5" height="94.5" rx="13.25" fill="none" stroke="#FFFFFF" stroke-opacity=".1" stroke-width="1.5"/>
+</g>
+<path d="M74 12v72" stroke="#3A3A42" stroke-width="1.6" stroke-dasharray="3 3"/>
+<g transform="translate(23 34) scale(1.2)" color="#FFFFFF" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4c-3 4-6 7.3-6 10.6a6 6 0 0 0 12 0C17 11.3 14 8 11 4z"/><path d="M19.5 2.5v4M17.5 4.5h4"/></g>
+<text x="90" y="36" font-family="Barlow Condensed, Arial Narrow, Arial, sans-serif" font-style="italic" font-weight="700" font-size="22" fill="#FFFFFF">Wash & wax</text>
+<text x="90" y="54" font-family="Barlow, Arial, sans-serif" font-size="12" fill="#A1A1AA">Free, with any booking</text>
+<text x="90" y="78" font-family="Barlow, Arial, sans-serif" font-weight="700" font-size="10" letter-spacing="1.4" fill="#FF8A8E">USE BY 30 NOV</text>
+<text x="286" y="78" text-anchor="end" font-family="Barlow Condensed, Arial Narrow, Arial, sans-serif" font-weight="600" font-size="13" letter-spacing="1.5" fill="#E4E4E7">GFT-7K2Q</text>
+</svg>

@@ -1,0 +1,799 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>GFT Spin Refresh</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,600;0,700;1,700&family=Barlow:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: same proposal system as Home, Appointments and Membership. Left = live phone mockup (the wheel really spins), right = numbered notes. */
+:root{
+  --bg:#0B0B0D; --bg-2:#111114; --panel:#18181B; --line:#2A2A31;
+  --fg:#F4F4F5; --muted:#A1A1AA; --dim:#71717A;
+  --red:#E0242B; --red-hot:#FF4A50; --red-deep:#9E1419;
+  --amber:#F5A524; --green:#2DC66B;
+  --display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+  --body:"Barlow",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --ios:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+img{max-width:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.55;
+  background-image:radial-gradient(90% 420px at 50% -120px,rgba(224,36,43,.22),transparent 70%);background-repeat:no-repeat}
+.wrap{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:48px 80px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;letter-spacing:.01em}
+h1{font-size:clamp(44px,8vw,84px);line-height:.92;font-style:italic;font-weight:700;text-transform:uppercase}
+h1 em{color:var(--red-hot);font-style:italic}
+h2{font-size:clamp(30px,4.4vw,44px);line-height:1;text-transform:uppercase;font-weight:700}
+h3{font-size:22px;line-height:1.1;font-weight:600}
+p{margin:0}
+.eyebrow{font-weight:600;font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+.lede{font-size:19px;color:#D4D4D8;max-width:62ch}
+:focus-visible{outline:2px solid var(--red-hot);outline-offset:3px;border-radius:6px}
+header.top{display:grid;gap:20px;padding-bottom:40px;border-bottom:1px solid var(--line)}
+.brief{display:flex;flex-wrap:wrap;gap:10px;margin-top:6px}
+.brief span{border:1px solid var(--line);background:var(--bg-2);border-radius:999px;padding:6px 14px;font-size:14px;color:#D4D4D8}
+.brief b{color:var(--fg);font-weight:600}
+.brief span.kept{border-color:rgba(45,198,107,.45)}
+.brief span.kept b{color:#7fe3a6}
+section{padding-top:64px;display:grid;gap:28px}
+.sec-head{display:grid;gap:10px;max-width:70ch}
+.sec-head p{color:var(--muted)}
+
+.controls{display:flex;flex-wrap:wrap;gap:18px 28px;align-items:flex-end}
+.ctl{display:grid;gap:8px}
+.ctl > span{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);font-weight:600}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{font:500 14px var(--body);color:var(--muted);background:var(--bg-2);border:1px solid var(--line);border-radius:999px;padding:7px 14px;cursor:pointer}
+.seg button[aria-pressed="true"]{color:var(--fg);border-color:var(--red);background:rgba(224,36,43,.14)}
+.seg button:hover{color:var(--fg)}
+
+.stage{display:grid;grid-template-columns:minmax(0,395px) minmax(0,1fr);gap:48px;align-items:start}
+.phone-col{position:sticky;top:calc(env(safe-area-inset-top,0px) + 16px)}
+@media (max-width:900px){.stage{grid-template-columns:minmax(0,1fr)}.phone-col{position:static;justify-self:center;width:100%;max-width:395px}}
+.notes{list-style:none;margin:0;padding:0;display:grid;gap:14px}
+.note{display:grid;grid-template-columns:34px minmax(0,1fr);gap:4px 14px;padding:18px 18px 18px 14px;background:var(--bg-2);border:1px solid var(--line);border-radius:16px}
+.note .num{grid-row:span 3;width:30px;height:30px;border-radius:50%;background:var(--red);color:#fff;font:700 16px var(--display);display:grid;place-items:center}
+.note h3{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.from{font-size:14px;color:var(--dim)}
+.from b{color:var(--muted);font-weight:500}
+.note p.d{color:#D4D4D8;font-size:15.5px}
+.note .see{grid-column:2;font:600 12.5px var(--body);color:var(--red-hot);background:none;border:0;padding:0;cursor:pointer;text-align:left;justify-self:start}
+.note .see:hover{text-decoration:underline}
+.effort{font:600 11px var(--body);letter-spacing:.12em;text-transform:uppercase;border-radius:999px;padding:3px 9px;border:1px solid}
+.e1{color:var(--green);border-color:rgba(45,198,107,.4)}
+.e2{color:var(--amber);border-color:rgba(245,165,36,.4)}
+.e3{color:var(--red-hot);border-color:rgba(255,74,80,.45)}
+.note.hl{border-color:rgba(224,36,43,.6)}
+
+/* ================= PHONE ================= */
+.phone{width:100%;max-width:395px;margin:0 auto;border-radius:52px;padding:10px;background:linear-gradient(145deg,#2a2a30,#121215 40%,#26262c);box-shadow:0 40px 80px -30px rgba(0,0,0,.9),0 0 0 1px #34343b}
+.screen{position:relative;border-radius:42px;overflow:hidden;font-family:var(--ios);color:#fff;-webkit-font-smoothing:antialiased;font-size:15px;line-height:1.3;min-height:812px;display:flex;flex-direction:column}
+.screen > *{position:relative;z-index:1}
+.bgfx{background-color:#0B0B0D;background-repeat:no-repeat;background-position:top center;background-size:100% auto}
+[data-bg="carbon"]{background-image:url("assets/backgrounds/bg-carbon-taillight.svg")}
+[data-bg="glow"]{background-image:url("assets/backgrounds/bg-taillight-glow.svg")}
+[data-bg="tread"]{background-image:url("assets/backgrounds/bg-tyre-tread.svg")}
+[data-bg="contour"]{background-image:url("assets/backgrounds/bg-contour-lines.svg")}
+[data-bg="streaks"]{background-image:url("assets/backgrounds/bg-speed-lines.svg")}
+.sb{display:flex;justify-content:space-between;align-items:center;padding:16px 30px 6px;font-weight:600;font-size:15px}
+.sb .ic{display:flex;gap:6px;align-items:center}
+.pad{padding:0 16px;flex:1}
+.ph-head{display:flex;align-items:center;justify-content:space-between;padding:10px 16px 6px;gap:8px}
+.chip-pts{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);border-radius:999px;padding:5px 11px 5px 5px;font-weight:600;font-size:14px}
+.coin{width:22px;height:22px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ff6a6f,var(--red) 55%,var(--red-deep));display:grid;place-items:center;font:700 11px var(--display);color:#fff;box-shadow:inset 0 0 0 2px rgba(255,255,255,.25)}
+.wordmark{font:italic 700 20px/1 var(--display);letter-spacing:.04em;text-transform:uppercase;text-align:center}
+.wordmark small{display:block;font:600 8.5px/1 var(--body);letter-spacing:.32em;color:#a8a8b0;margin-top:3px;font-style:normal}
+.wordmark i{color:var(--red-hot)}
+.hd-ic{display:flex;gap:6px}
+.icbtn{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08)}
+.blk{position:relative}
+.mk{position:absolute;left:-8px;top:-8px;width:20px;height:20px;border-radius:50%;background:var(--red);color:#fff;font:700 12px/20px var(--display);text-align:center;z-index:5;box-shadow:0 0 0 2px #0B0B0D}
+.phone.nomk .mk{display:none}
+.titlerow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 0 6px}
+.titlerow h4{margin:0;font-size:30px;font-weight:700;letter-spacing:-.015em}
+.titlerow a{font-size:13px;color:#ff8a8e;font-weight:600}
+
+/* tokens */
+.tokens{display:flex;align-items:center;gap:12px;background:rgba(24,24,27,.92);border:1px solid #2a2a31;border-radius:16px;padding:10px 12px}
+.tokens .tk{display:flex;gap:5px}
+.tokens .tk span{width:34px;height:24px;display:block;transition:transform .3s,opacity .3s}
+.tokens .tk span svg{width:100%;height:100%;display:block}
+.tokens .tk span.used{opacity:.9}
+.tokens .tt{flex:1;min-width:0;text-align:right}
+.tokens .tt b{display:block;font-size:14.5px}
+.tokens .tt small{color:#a1a1aa;font-size:12px;font-variant-numeric:tabular-nums}
+
+/* wheel */
+.wheelbox{position:relative;margin:22px auto 6px;width:100%;max-width:330px;aspect-ratio:1}
+.wheelbox > svg:not(.ptr){width:100%;height:100%;display:block}
+.wheelbox .ptr{position:absolute;left:50%;top:-14px;transform:translateX(-50%);z-index:3;filter:drop-shadow(0 4px 6px rgba(0,0,0,.6))}
+#wrot{transform-origin:0px 0px;transition:transform 4.6s cubic-bezier(.13,.7,.12,1)}
+.wheelbox.locked > svg:not(.ptr){filter:grayscale(.85) brightness(.45)}
+.lockov{position:absolute;inset:0;display:grid;place-items:center;z-index:2}
+.lockov div{background:rgba(11,11,13,.88);border:1px solid #3a3a42;border-radius:18px;padding:14px 18px;text-align:center;display:grid;gap:4px}
+.lockov b{font:italic 700 24px/1 var(--display);text-transform:uppercase}
+.lockov small{color:#a1a1aa;font-size:12.5px;font-variant-numeric:tabular-nums}
+.spinbtn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;margin-top:10px;background:var(--red);color:#fff;border:0;border-radius:18px;padding:15px;font:italic 700 24px/1 var(--display);letter-spacing:.06em;text-transform:uppercase;cursor:pointer;box-shadow:0 14px 28px -12px rgba(224,36,43,.85)}
+.spinbtn:disabled{background:#26262b;color:#71717a;box-shadow:none;cursor:not-allowed}
+.spinbtn.ghost{background:transparent;border:1px solid #44444c;font-size:17px;padding:12px}
+.hint{text-align:center;font-size:12.5px;color:#a1a1aa;margin-top:8px}
+.hint a{color:#ff8a8e}
+.bonus{display:flex;gap:12px;align-items:center;margin-top:12px;border:1px dashed #3a3a42;background:rgba(24,24,27,.8);border-radius:16px;padding:12px}
+.bonus .t{flex:1;min-width:0}
+.bonus b{display:block;font-size:14px}
+.bonus small{color:#a1a1aa;font-size:12px}
+.bonus .sg{font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--amber);border:1px solid rgba(245,165,36,.5);border-radius:999px;padding:1px 6px;margin-left:6px;vertical-align:2px}
+.go{background:var(--red);color:#fff;font-weight:700;font-size:13px;border-radius:999px;padding:8px 12px;white-space:nowrap}
+
+.lbl{font-size:12.5px;letter-spacing:.16em;text-transform:uppercase;color:#a1a1aa;font-weight:600;display:flex;justify-content:space-between;align-items:center;margin:22px 0 10px}
+.lbl a{color:#ff6a6f;letter-spacing:.06em}
+
+/* coupons */
+.wallet{display:flex;gap:10px;overflow-x:auto;scrollbar-width:none;margin:0 -16px;padding:2px 16px 4px;scroll-snap-type:x mandatory}
+.wallet::-webkit-scrollbar{display:none}
+.cp{flex:0 0 250px;scroll-snap-align:start;display:grid;grid-template-columns:62px minmax(0,1fr);min-height:92px;border-radius:14px;background:#1b1b1f;border:1px solid #2e2e35;position:relative;
+  -webkit-mask:radial-gradient(circle at 62px 0,transparent 8px,#000 8.5px) top/100% 51% no-repeat,radial-gradient(circle at 62px 100%,transparent 8px,#000 8.5px) bottom/100% 51% no-repeat;
+          mask:radial-gradient(circle at 62px 0,transparent 8px,#000 8.5px) top/100% 51% no-repeat,radial-gradient(circle at 62px 100%,transparent 8px,#000 8.5px) bottom/100% 51% no-repeat}
+.cp .stub{background:linear-gradient(160deg,#ff4a50,#9e1419);display:grid;place-items:center;color:#fff;border-right:2px dashed rgba(0,0,0,.35)}
+.cp .stub svg{width:28px;height:28px}
+.cp .bd{padding:10px 12px;display:grid;gap:2px;align-content:center}
+.cp .bd b{font:italic 700 20px/1.05 var(--display);text-transform:uppercase}
+.cp .bd small{color:#a1a1aa;font-size:12px}
+.cp .bd .ft{display:flex;justify-content:space-between;align-items:center;margin-top:6px;gap:6px}
+.cp .bd .ft span{font-size:10.5px;font-weight:700;letter-spacing:.08em;color:#ff8a8e}
+.cp .bd .ft code{font:600 12px var(--display);letter-spacing:.12em;color:#e4e4e7}
+.cp.new{animation:pop .6s cubic-bezier(.2,1.4,.4,1)}
+@keyframes pop{0%{transform:scale(.6);opacity:0}100%{transform:scale(1);opacity:1}}
+.empty-w{border:1px dashed #3a3a42;border-radius:14px;padding:16px;text-align:center;color:#a1a1aa;font-size:13px}
+
+/* attempts */
+.att{background:rgba(24,24,27,.95);border:1px solid #2a2a31;border-radius:18px;padding:4px 14px}
+.att .r{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #26262b}
+.att .r:last-child{border-bottom:0}
+.att .r .ic{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:rgba(224,36,43,.15);color:#ff6a6f;flex:none}
+.att .r .ic svg{width:17px;height:17px}
+.att .r.miss .ic{background:#26262b;color:#71717a}
+.att .r .t{flex:1;min-width:0}
+.att .r b{display:block;font-size:14px;font-weight:600}
+.att .r small{color:#9a9aa3;font-size:12px}
+.att .r .s{font-size:12px;font-weight:700;color:#7fe3a6}
+.att .r.miss .s{color:#71717a}
+.terms{text-align:center;font-size:11.5px;color:#71717a;margin:16px 0 4px}
+.terms a{color:#a1a1aa;text-decoration:underline}
+
+/* result sheet */
+.res{position:absolute!important;inset:0;z-index:20!important;display:grid;align-items:end;background:rgba(0,0,0,.55);backdrop-filter:blur(3px)}
+.res .sh{background:#141417;border-top:1px solid #2e2e35;border-radius:28px 28px 0 0;padding:12px 18px 34px;display:grid;gap:12px;justify-items:center;text-align:center;position:relative;overflow:hidden;animation:up .45s cubic-bezier(.2,.9,.3,1)}
+@keyframes up{from{transform:translateY(100%)}to{transform:none}}
+.res .grab{width:38px;height:5px;border-radius:3px;background:#3a3a42}
+.res .big{width:84px;height:84px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 35% 30%,#ff6a6f,var(--red) 55%,var(--red-deep));color:#fff;box-shadow:0 0 0 8px rgba(224,36,43,.18),0 0 40px rgba(224,36,43,.5)}
+.res .big svg{width:40px;height:40px}
+.res.miss .big{background:#26262b;color:#a1a1aa;box-shadow:0 0 0 8px rgba(255,255,255,.04)}
+.res small.k{font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;font-weight:700;color:#ff8a8e}
+.res.miss small.k{color:#a1a1aa}
+.res h5{margin:0;font:italic 700 34px/1 var(--display);text-transform:uppercase}
+.res p{color:#c4c4cc;font-size:13.5px;max-width:30ch}
+.res .acts{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%}
+.res .btn{font:700 14px var(--ios);border-radius:14px;padding:12px 8px;cursor:pointer;border:0}
+.res .btn.red{background:var(--red);color:#fff}
+.res .btn.ghost{background:transparent;border:1px solid #44444c;color:#fff}
+.conf{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.conf i{position:absolute;top:-12px;width:7px;height:12px;border-radius:2px;animation:fall 1.6s ease-in forwards}
+@keyframes fall{to{transform:translateY(420px) rotate(540deg);opacity:0}}
+
+.tabs{display:grid;grid-template-columns:repeat(5,1fr);padding:10px 4px 26px;margin-top:16px;background:rgba(11,11,13,.96);border-top:1px solid #222227}
+.tabs div{display:grid;justify-items:center;gap:4px;font-size:11px;color:#a1a1aa}
+.tabs div.on{color:var(--red-hot)}
+.homebar{position:absolute!important;bottom:8px;left:50%;transform:translateX(-50%);width:120px;height:5px;border-radius:3px;background:#fff;z-index:25!important}
+svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+svg.i.sm{width:15px;height:15px}
+svg.i.lg{width:24px;height:24px}
+
+/* ---------- prizes table ---------- */
+.ptable{overflow-x:auto;border:1px solid var(--line);border-radius:18px;background:var(--bg-2)}
+.ptable table{width:100%;border-collapse:collapse;min-width:720px;font-size:15px}
+.ptable th{text-align:left;font:600 12px var(--body);letter-spacing:.14em;text-transform:uppercase;color:var(--dim);padding:14px 16px;border-bottom:1px solid var(--line)}
+.ptable td{padding:12px 16px;border-bottom:1px solid var(--line);vertical-align:middle;color:#D4D4D8}
+.ptable tr:last-child td{border-bottom:0}
+.ptable .w{display:flex;align-items:center;gap:10px;font:italic 700 18px var(--display);color:var(--fg);text-transform:uppercase;white-space:nowrap}
+.ptable .w span.sw{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;color:#fff;flex:none}
+.ptable .w svg{width:18px;height:18px}
+.ptable td.num{font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+.ptable .cf{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--amber);border:1px solid rgba(245,165,36,.5);border-radius:999px;padding:1px 7px;margin-left:6px;white-space:nowrap}
+.callout{border-left:3px solid var(--red);padding:4px 0 4px 16px;color:#D4D4D8;max-width:78ch;font-size:16px}
+.callout b{color:#fff}
+
+/* ---------- showcase ---------- */
+.show{display:grid;grid-template-columns:minmax(0,380px) minmax(0,1fr);gap:40px;align-items:center}
+@media (max-width:860px){.show{grid-template-columns:minmax(0,1fr)}}
+.show .bigwheel{position:relative;max-width:380px;width:100%;margin:0 auto}
+.show .bigwheel > svg:not(.ptr){width:100%;height:auto;display:block}
+.show .bigwheel .ptr{position:absolute;left:50%;top:-16px;transform:translateX(-50%)}
+.anat{display:grid;gap:12px;margin:0;padding:0;list-style:none}
+.anat li{display:grid;grid-template-columns:120px minmax(0,1fr);gap:12px;padding-bottom:12px;border-bottom:1px solid var(--line);font-size:15px;color:#D4D4D8}
+.anat li b{font-family:var(--display);font-size:19px;font-weight:600;color:var(--fg)}
+.coupons{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px}
+.coupons svg{width:100%;height:auto;display:block}
+
+/* ---------- rules / fixes / phases ---------- */
+.rules{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+@media (max-width:760px){.rules{grid-template-columns:minmax(0,1fr)}}
+.rules div{border:1px solid rgba(245,165,36,.35);background:rgba(245,165,36,.05);border-radius:16px;padding:16px 18px;display:grid;gap:6px;align-content:start}
+.rules b{font-family:var(--display);font-size:20px;font-weight:600}
+.rules span{color:#D4D4D8;font-size:15px}
+.phases{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+@media (max-width:860px){.phases{grid-template-columns:minmax(0,1fr)}}
+.phase{border:1px solid var(--line);border-radius:18px;padding:20px;background:var(--bg-2);display:grid;gap:12px;align-content:start}
+.phase .tagline{font-size:14px;color:var(--muted)}
+.phase ul{margin:0;padding-left:18px;display:grid;gap:6px;font-size:15px;color:#D4D4D8}
+.phase .needs{font-size:13.5px;color:var(--dim);border-top:1px solid var(--line);padding-top:10px}
+.phase .needs b{color:var(--muted);font-weight:600}
+.phase h3 .ph{color:var(--red-hot)}
+.two{display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:32px;align-items:start}
+@media (max-width:760px){.two{grid-template-columns:minmax(0,1fr)}}
+.skip{display:grid;gap:14px}
+.skip div{display:grid;gap:4px;padding-bottom:14px;border-bottom:1px solid var(--line)}
+.skip b{font-family:var(--display);font-size:21px;font-weight:600}
+.skip span{color:#D4D4D8;font-size:15.5px;max-width:68ch}
+figure.today{margin:0;display:grid;gap:8px}
+figure.today img{border-radius:22px;border:1px solid var(--line);width:100%;max-width:220px}
+figure.today figcaption{font-size:13px;color:var(--dim)}
+footer{margin-top:64px;padding-top:20px;border-top:1px solid var(--line);font-size:13.5px;color:var(--dim)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;scroll-behavior:auto!important}#wrot{transition:transform .3s linear!important}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></symbol>
+    <symbol id="i-cardb" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h4"/></symbol>
+    <symbol id="i-spin" viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 1-15.5 6.2M3 12a9 9 0 0 1 15.5-6.2M18.5 2v4h-4M5.5 22v-4h4"/></symbol>
+    <symbol id="i-gift" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8s1-5 4.5-5a2.5 2.5 0 0 1 0 5"/></symbol>
+  </defs>
+</svg>
+
+<div class="wrap">
+<header class="top">
+  <p class="eyebrow">Garage Full Throttle · customer app · design proposal 4</p>
+  <h1>Spin <em>refresh</em></h1>
+  <p class="lede">The same treatment as Home, Appointments and Membership, applied to the Spin tab. The prizes, their order on the wheel and the 3 spins a week stay exactly as they are. The wheel becomes a tyre, and every win goes into a "My prizes" wallet the customer can use at the counter or on their next booking. Press <b>Spin the wheel</b> in the mockup. It spins for real (demo odds only).</p>
+  <div class="brief">
+    <span class="kept"><b>Kept:</b> all 8 prizes, same order</span>
+    <span class="kept"><b>Kept:</b> 3 spins a week</span>
+    <span><b>New:</b> a wallet for prizes you win</span>
+    <span><b>New:</b> clear rules and odds</span>
+  </div>
+</header>
+
+<!-- ================= TAB ================= -->
+<section id="tab" aria-labelledby="h-tab">
+  <div class="sec-head">
+    <p class="eyebrow">01 · The new Spin tab</p>
+    <h2 id="h-tab">A wheel worth coming back for</h2>
+    <p>Spin until you run out, or jump between a fresh week and an out-of-spins week. The red numbers on the phone match the notes on the right.</p>
+  </div>
+  <div class="controls">
+    <div class="ctl"><span>Customer</span>
+      <div class="seg" id="seg-state">
+        <button type="button" id="st-fresh" data-state="fresh" aria-pressed="true">New week · 3 spins</button>
+        <button type="button" id="st-out" data-state="out" aria-pressed="false">Out of spins</button>
+      </div>
+    </div>
+    <div class="ctl"><span>Background</span>
+      <div class="seg" id="seg-bg">
+        <button type="button" id="bg-carbon" data-bg="carbon" aria-pressed="true">Carbon + tail-light</button>
+        <button type="button" id="bg-glow" data-bg="glow" aria-pressed="false">Tail-light glow</button>
+        <button type="button" id="bg-tread" data-bg="tread" aria-pressed="false">Tyre tread</button>
+        <button type="button" id="bg-contour" data-bg="contour" aria-pressed="false">Contour</button>
+        <button type="button" id="bg-streaks" data-bg="streaks" aria-pressed="false">Speed lines</button>
+      </div>
+    </div>
+    <div class="ctl"><span>Markers</span>
+      <div class="seg"><button type="button" id="mk-toggle" aria-pressed="true">Show numbers</button></div>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div class="phone-col">
+      <div class="phone" id="phone">
+        <div class="screen bgfx" id="screen" data-bg="carbon">
+          <div class="sb"><span>9:41</span>
+            <span class="ic" aria-hidden="true">
+              <svg width="18" height="11" viewBox="0 0 18 11"><rect x="0" y="7" width="3" height="4" rx="1" fill="#fff"/><rect x="5" y="5" width="3" height="6" rx="1" fill="#fff"/><rect x="10" y="2.5" width="3" height="8.5" rx="1" fill="#fff"/><rect x="15" y="0" width="3" height="11" rx="1" fill="#fff" opacity=".35"/></svg>
+              <svg width="24" height="12" viewBox="0 0 24 12"><rect x=".5" y=".5" width="20" height="11" rx="3" fill="none" stroke="#fff" opacity=".5"/><rect x="2" y="2" width="14" height="8" rx="1.6" fill="#fff"/><rect x="21.5" y="4" width="1.6" height="4" rx=".8" fill="#fff" opacity=".5"/></svg>
+            </span>
+          </div>
+          <div class="ph-head">
+            <div class="chip-pts"><span class="coin">P</span>20 pts</div>
+            <div class="wordmark">Full <i>Throttle</i><small>GARAGE</small></div>
+            <div class="hd-ic">
+              <span class="icbtn"><svg class="i" style="width:18px;height:18px"><use href="#i-bell"/></svg></span>
+              <span class="icbtn"><svg class="i" style="width:18px;height:18px"><use href="#i-user"/></svg></span>
+            </div>
+          </div>
+
+          <div class="pad">
+            <div class="titlerow"><h4>Spin</h4><a>Prizes &amp; odds</a></div>
+
+            <!-- 1 tokens -->
+            <div class="tokens blk">
+              <span class="mk">1</span>
+              <div class="tk" id="tk"></div>
+              <div class="tt"><b id="tk-t">3 spins left this week</b><small id="tk-s">Resets Monday · 4d 12h</small></div>
+            </div>
+
+            <!-- 2 wheel -->
+            <div class="wheelbox blk" id="wheelbox">
+              <span class="mk" style="left:0;top:10px">2</span>
+              <svg class="ptr" width="36" height="46" viewBox="0 0 36 46" aria-hidden="true"><path d="M18 44 L4.5 15 A15 15 0 1 1 31.5 15 Z" fill="#E0242B" stroke="#FFFFFF" stroke-width="2.5" stroke-linejoin="round"/><circle cx="18" cy="15" r="5.5" fill="#FFFFFF"/></svg>
+              <svg viewBox="-170 -170 340 340" width="340" height="340" role="img" aria-label="Prize wheel with eight prizes"><defs>
+<radialGradient id="wrp" cx="0" cy="0" r="136" gradientUnits="userSpaceOnUse"><stop offset=".2" stop-color="#9E1419"/><stop offset="1" stop-color="#E0242B"/></radialGradient>
+<radialGradient id="wdp" cx="0" cy="0" r="136" gradientUnits="userSpaceOnUse"><stop offset=".2" stop-color="#141417"/><stop offset="1" stop-color="#26262B"/></radialGradient>
+<radialGradient id="wgp" cx="0" cy="0" r="170" gradientUnits="userSpaceOnUse"><stop offset=".8" stop-color="#E0242B" stop-opacity=".35"/><stop offset="1" stop-color="#E0242B" stop-opacity="0"/></radialGradient>
+<path id="wsp" d="M0,-144.5 A144.5,144.5 0 1,1 -0.01,-144.5"/>
+</defs><circle r="170" fill="url(#wgp)"/><g id="wrot"><circle r="161" fill="#111113"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(0)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(6)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(12)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(18)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(24)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(30)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(36)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(42)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(48)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(54)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(60)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(66)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(72)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(78)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(84)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(90)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(96)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(102)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(108)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(114)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(120)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(126)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(132)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(138)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(144)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(150)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(156)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(162)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(168)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(174)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(180)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(186)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(192)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(198)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(204)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(210)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(216)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(222)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(228)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(234)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(240)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(246)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(252)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(258)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(264)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(270)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(276)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(282)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(288)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(294)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(300)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(306)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(312)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(318)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(324)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(330)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(336)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(342)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(348)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(354)"/><circle r="150.5" fill="#0E0E10"/><text font-family="Barlow, Arial, sans-serif" font-weight="700" font-size="7.4" letter-spacing="1.9" fill="#4A4A52"><textPath href="#wsp">GARAGE FULL THROTTLE  ·  SPIN TO WIN  ·  GARAGE FULL THROTTLE  ·  SPIN TO WIN  ·  GARAGE FULL THROTTLE  ·  SPIN TO WIN  ·  </textPath></text><circle r="139.5" fill="#2C2C32" stroke="#E0242B" stroke-width="2"/><path d="M0 0L0.00 -135.00A135 135 0 0 1 95.46 -95.46Z" fill="url(#wrp)" stroke="#0B0B0D" stroke-width="2"/><path d="M0 0L95.46 -95.46A135 135 0 0 1 135.00 0.00Z" fill="url(#wdp)" stroke="#0B0B0D" stroke-width="2"/><path d="M0 0L135.00 0.00A135 135 0 0 1 95.46 95.46Z" fill="url(#wrp)" stroke="#0B0B0D" stroke-width="2"/><path d="M0 0L95.46 95.46A135 135 0 0 1 0.00 135.00Z" fill="url(#wdp)" stroke="#0B0B0D" stroke-width="2"/><path d="M0 0L0.00 135.00A135 135 0 0 1 -95.46 95.46Z" fill="url(#wrp)" stroke="#0B0B0D" stroke-width="2"/><path d="M0 0L-95.46 95.46A135 135 0 0 1 -135.00 0.00Z" fill="url(#wdp)" stroke="#0B0B0D" stroke-width="2"/><path d="M0 0L-135.00 0.00A135 135 0 0 1 -95.46 -95.46Z" fill="url(#wrp)" stroke="#0B0B0D" stroke-width="2"/><path d="M0 0L-95.46 -95.46A135 135 0 0 1 -0.00 -135.00Z" fill="url(#wdp)" stroke="#0B0B0D" stroke-width="2"/><g transform="rotate(22.5)" color="#FFFFFF"><g transform="translate(-11 -125) scale(.92)" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.5"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M5.6 18.4l1.8-1.8M16.6 7.4l1.8-1.8"/></g><text y="-77" text-anchor="middle" font-family="Barlow Condensed, Arial Narrow, Arial, sans-serif" font-style="italic" font-weight="700" font-size="18" fill="#FFFFFF">TYRES</text><text y="-62" text-anchor="middle" font-family="Barlow, Arial, sans-serif" font-weight="700" font-size="9.5" letter-spacing="1.5" fill="#FFFFFF" fill-opacity=".85">4+1</text></g><g transform="rotate(67.5)" color="#FFFFFF"><g transform="translate(-11 -125) scale(.92)" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V5a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v16M3 21h13M4 10h11"/><path d="M15 8h2a2 2 0 0 1 2 2v6.5a1.5 1.5 0 0 0 3 0V9l-3-3"/></g><text y="-77" text-anchor="middle" font-family="Barlow Condensed, Arial Narrow, Arial, sans-serif" font-style="italic" font-weight="700" font-size="18" fill="#FFFFFF">$50</text><text y="-62" text-anchor="middle" font-family="Barlow, Arial, sans-serif" font-weight="700" font-size="9.5" letter-spacing="1.5" fill="#FFFFFF" fill-opacity=".85">FUEL</text></g><g transform="rotate(112.5)" color="#FFFFFF"><g transform="translate(-11 -125) scale(.92)" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3"/><path d="M12 6.8h.01M17.2 12h.01M12 17.2h.01M6.8 12h.01"/><path d="M15.5 2.8a10 10 0 0 1 5.7 6.4" stroke-width="3.2"/></g><text y="-77" text-anchor="middle" font-family="Barlow Condensed, Arial Narrow, Arial, sans-serif" font-style="italic" font-weight="700" font-size="18" fill="#FFFFFF">20%</text><text y="-62" text-anchor="middle" font-family="Barlow, Arial, sans-serif" font-weight="700" font-size="9.5" letter-spacing="1.5" fill="#FFFFFF" fill-opacity=".85">BRAKES</text></g><g transform="rotate(157.5)" color="#FFFFFF"><g transform="translate(-11 -125) scale(.92)" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18Q12 3 21 18"/><path d="M12 19 7 8.5"/><circle cx="12" cy="19" r="1.6"/></g><text y="-77" text-anchor="middle" font-family="Barlow Condensed, Arial Narrow, Arial, sans-serif" font-style="italic" font-weight="700" font-size="18" fill="#FFFFFF">FREE</text><text y="-62" text-anchor="middle" font-family="Barlow, Arial, sans-serif" font-weight="700" font-size="9.5" letter-spacing="1.5" fill="#FFFFFF" fill-opacity=".85">WIPERS</text></g><g transform="rotate(202.5)" color="#FFFFFF"><g transform="translate(-11 -125) scale(.92)" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4c-3 4-6 7.3-6 10.6a6 6 0 0 0 12 0C17 11.3 14 8 11 4z"/><path d="M19.5 2.5v4M17.5 4.5h4"/></g><text y="-77" text-anchor="middle" font-family="Barlow Condensed, Arial Narrow, Arial, sans-serif" font-style="italic" font-weight="700" font-size="18" fill="#FFFFFF">WASH</text><text y="-62" text-anchor="middle" font-family="Barlow, Arial, sans-serif" font-weight="700" font-size="9.5" letter-spacing="1.5" fill="#FFFFFF" fill-opacity=".85">& WAX</text></g><g transform="rotate(247.5)" color="#FFFFFF"><g transform="translate(-11 -125) scale(.92)" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m8.5 12 2.5 2.5 4.5-5"/></g><text y="-77" text-anchor="middle" font-family="Barlow Condensed, Arial Narrow, Arial, sans-serif" font-style="italic" font-weight="700" font-size="18" fill="#FFFFFF">SAFETY</text><text y="-62" text-anchor="middle" font-family="Barlow, Arial, sans-serif" font-weight="700" font-size="9.5" letter-spacing="1.5" fill="#FFFFFF" fill-opacity=".85">CHECK</text></g><g transform="rotate(292.5)" color="#FFFFFF"><g transform="translate(-11 -125) scale(.92)" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5" width="19" height="13" rx="2"/><path d="M5.5 12h3l1.5-3.5 3 7 1.5-3.5h4"/><path d="M8 21h8"/></g><text y="-77" text-anchor="middle" font-family="Barlow Condensed, Arial Narrow, Arial, sans-serif" font-style="italic" font-weight="700" font-size="18" fill="#FFFFFF">SCAN</text><text y="-62" text-anchor="middle" font-family="Barlow, Arial, sans-serif" font-weight="700" font-size="9.5" letter-spacing="1.5" fill="#FFFFFF" fill-opacity=".85">REPORT</text></g><g transform="rotate(337.5)" color="#FFFFFF"><g transform="translate(-11 -125) scale(.92)" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></g><text y="-77" text-anchor="middle" font-family="Barlow Condensed, Arial Narrow, Arial, sans-serif" font-style="italic" font-weight="700" font-size="18" fill="#FFFFFF">NO</text><text y="-62" text-anchor="middle" font-family="Barlow, Arial, sans-serif" font-weight="700" font-size="9.5" letter-spacing="1.5" fill="#FFFFFF" fill-opacity=".85">LUCK</text></g><circle r="31" fill="#0B0B0D" stroke="#E0242B" stroke-width="3"/><circle cx="0.00" cy="-18.00" r="3.4" fill="#3A3A42" stroke="#5A5A62" stroke-width="1"/><circle cx="17.12" cy="-5.56" r="3.4" fill="#3A3A42" stroke="#5A5A62" stroke-width="1"/><circle cx="10.58" cy="14.56" r="3.4" fill="#3A3A42" stroke="#5A5A62" stroke-width="1"/><circle cx="-10.58" cy="14.56" r="3.4" fill="#3A3A42" stroke="#5A5A62" stroke-width="1"/><circle cx="-17.12" cy="-5.56" r="3.4" fill="#3A3A42" stroke="#5A5A62" stroke-width="1"/></g><text y="4.5" text-anchor="middle" font-family="Barlow Condensed, Arial Narrow, Arial, sans-serif" font-style="italic" font-weight="700" font-size="13" fill="#FFFFFF">GFT</text></svg>
+              <div class="lockov" id="lockov" hidden><div><b>Back Monday</b><small id="lock-t">New spins in 4d 12h 05m</small></div></div>
+            </div>
+
+            <!-- 3 spin button -->
+            <div class="blk">
+              <span class="mk" style="top:2px">3</span>
+              <button type="button" class="spinbtn" id="spinbtn">Spin the wheel <svg class="i lg" style="stroke-width:2.4"><use href="#i-spin"/></svg></button>
+              <p class="hint" id="hint">Win discounts and free services. <a>Rules &amp; odds</a></p>
+            </div>
+
+            <!-- 8 bonus (out state) -->
+            <div class="bonus blk" id="bonus" hidden>
+              <span class="mk">8</span>
+              <span style="color:#ff6a6f"><svg class="i lg"><use href="#i-cal"/></svg></span>
+              <div class="t"><b>Want a bonus spin?<span class="sg">Suggested</span></b><small>Book a service this week and get 1 extra spin.</small></div>
+              <span class="go">Book</span>
+            </div>
+
+            <!-- 5 wallet -->
+            <div class="lbl"><span>My prizes</span><a id="w-count">1 to use</a></div>
+            <div class="blk">
+              <span class="mk" style="left:-8px">5</span>
+              <div class="wallet" id="wallet"></div>
+            </div>
+
+            <!-- 7 attempts -->
+            <div class="lbl"><span>Recent spins</span></div>
+            <div class="att blk" id="att">
+              <span class="mk">7</span>
+            </div>
+
+            <!-- 9 terms -->
+            <p class="terms blk"><span class="mk" style="left:-4px;top:-12px">9</span>Free to play. Prize use-by dates apply. <a>Terms</a> · <a>Odds</a><br>Apple is not a sponsor of this promotion.</p>
+          </div>
+
+          <div class="tabs" aria-hidden="true">
+            <div><svg class="i lg"><use href="#i-home"/></svg>Home</div>
+            <div><svg class="i lg"><use href="#i-cal"/></svg>Appointment</div>
+            <div><svg class="i lg"><use href="#i-cardb"/></svg>Membership</div>
+            <div class="on"><svg class="i lg"><use href="#i-spin"/></svg>Spin</div>
+            <div><svg class="i lg"><use href="#i-user"/></svg>Profile</div>
+          </div>
+          <span class="homebar"></span>
+
+          <!-- 4 result sheet -->
+          <div class="res" id="res" hidden>
+            <div class="sh">
+              <span class="mk" style="left:12px;top:12px">4</span>
+              <div class="conf" id="conf"></div>
+              <span class="grab"></span>
+              <div class="big" id="res-ic"></div>
+              <small class="k" id="res-k">You won</small>
+              <h5 id="res-h">$50 fuel</h5>
+              <p id="res-p">Saved to My prizes. Use by 30 Nov.</p>
+              <div class="acts">
+                <button type="button" class="btn red" id="res-a">Use on a booking</button>
+                <button type="button" class="btn ghost" id="res-b">Spin again</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li class="note"><span class="num">1</span>
+        <h3>Spin tickets with a reset countdown <span class="effort e1">Small</span></h3>
+        <p class="from">Replaces: <b>"3 spins left this week" pill, cut off under the header</b></p>
+        <p class="d">Three ticket icons that tear off as they're used, and a live countdown to Monday's reset. It's the same 3-a-week rule, shown as something the customer can count at a glance.</p>
+      </li>
+      <li class="note hl"><span class="num">2</span>
+        <h3>The wheel is a tyre <span class="effort e2">Medium</span></h3>
+        <p class="from">Replaces: <b>a flat red-and-black pie</b></p>
+        <p class="d">Tread blocks around the edge, "Garage Full Throttle · Spin to win" lettered on the sidewall, an alloy hub with five wheel nuts, and an icon on every prize. The same eight prizes in the same order. Only a garage could own this wheel.</p>
+      </li>
+      <li class="note hl"><span class="num">3</span>
+        <h3>A spin that feels real <span class="effort e2">Medium</span></h3>
+        <p class="from">Upgrade of: <b>"Spin the wheel" button</b></p>
+        <p class="d">Five fast turns that slow down onto the prize, with a light tick of haptic feedback per segment on the phone. The server decides the prize before the animation starts, and the wheel just lands on it, so nobody can cheat by changing the app.</p>
+      </li>
+      <li class="note"><span class="num">4</span>
+        <h3>Result sheet with a next step <span class="effort e1">Small</span></h3>
+        <p class="from">GFT addition</p>
+        <p class="d">A win slides up a sheet with the prize, its use-by date and a button to use it on a booking. "No luck" gets its own calm version showing spins left, without confetti. Try a few spins in the mockup.</p>
+      </li>
+      <li class="note hl"><span class="num">5</span>
+        <h3>My prizes wallet <span class="effort e2">Medium</span></h3>
+        <p class="from">GFT addition (the biggest gap today)</p>
+        <p class="d">Today there's nowhere to see what you've won. Each prize becomes a ticket with a code and a use-by date. Customers show it at the counter or pick it in the booking flow, and the garage marks it used in the admin panel.</p>
+      </li>
+      <li class="note"><span class="num">6</span>
+        <h3>Plain-English prize names <span class="effort e1">Small</span></h3>
+        <p class="from">Replaces: <b>labels like "Tyres 4+1" and "Scan report"</b></p>
+        <p class="d">The wheel keeps its short labels, but the ticket and the prize list say exactly what you get. "Tyres 4+1" means buy 4, get the 5th free? The garage needs to confirm (see section 02).</p>
+      </li>
+      <li class="note"><span class="num">7</span>
+        <h3>Recent spins, with what happened <span class="effort e1">Small</span></h3>
+        <p class="from">Replaces: <b>"No spins yet" box</b></p>
+        <p class="d">Each spin with its day and result, and whether the prize was saved or used. It updates as you spin in the mockup.</p>
+      </li>
+      <li class="note"><span class="num">8</span>
+        <h3>Out-of-spins state <span class="effort e1">Small</span></h3>
+        <p class="from">GFT addition</p>
+        <p class="d">When the three are gone, the wheel greys out with "Back Monday" and a countdown, instead of a button that does nothing. An optional bonus spin for booking a service is marked "Suggested", because it changes the rules.</p>
+        <button type="button" class="see" data-go="out">Show this state</button>
+      </li>
+      <li class="note"><span class="num">9</span>
+        <h3>Rules, odds and app store wording <span class="effort e1">Small</span></h3>
+        <p class="from">GFT addition (needed before launch)</p>
+        <p class="d">A short line under the wheel linking to terms and odds, including the statement that Apple isn't a sponsor. Apple asks for this in its App Store rules for contests. See section 04.</p>
+      </li>
+    </ol>
+  </div>
+</section>
+
+<!-- ================= PRIZES ================= -->
+<section id="prizes" aria-labelledby="h-prizes">
+  <div class="sec-head">
+    <p class="eyebrow">02 · Your prizes, kept exactly</p>
+    <h2 id="h-prizes">Eight prizes, explained</h2>
+    <p>Same eight prizes, same order, clockwise from the top. The "What the customer gets" wording, the use-by periods and the demo odds are suggestions for the garage to confirm or replace.</p>
+  </div>
+  <div class="ptable">
+    <table>
+      <thead><tr><th>On the wheel</th><th>What the customer gets</th><th>Suggested use-by</th><th style="text-align:right">Demo odds</th></tr></thead>
+      <tbody id="ptbody"></tbody>
+    </table>
+  </div>
+  <p class="callout"><b>Set the real odds in the admin panel, not in the app.</b> The demo odds only drive this mockup. Whatever the garage chooses should be published on the "Odds" page and decided on the server for each spin.</p>
+</section>
+
+<!-- ================= SHOWCASE ================= -->
+<section id="wheel" aria-labelledby="h-wheel">
+  <div class="sec-head">
+    <p class="eyebrow">03 · The wheel and the tickets</p>
+    <h2 id="h-wheel">Drawn as a tyre, kept as a ticket</h2>
+  </div>
+  <div class="show">
+    <div class="bigwheel"><svg class="ptr" width="36" height="46" viewBox="0 0 36 46" aria-hidden="true"><path d="M18 44 L4.5 15 A15 15 0 1 1 31.5 15 Z" fill="#E0242B" stroke="#FFFFFF" stroke-width="2.5" stroke-linejoin="round"/><circle cx="18" cy="15" r="5.5" fill="#FFFFFF"/></svg><svg viewBox="-170 -170 340 340" width="340" height="340" role="img" aria-label="Prize wheel with eight prizes"><defs>
+<radialGradient id="wrg" cx="0" cy="0" r="136" gradientUnits="userSpaceOnUse"><stop offset=".2" stop-color="#9E1419"/><stop offset="1" stop-color="#E0242B"/></radialGradient>
+<radialGradient id="wdg" cx="0" cy="0" r="136" gradientUnits="userSpaceOnUse"><stop offset=".2" stop-color="#141417"/><stop offset="1" stop-color="#26262B"/></radialGradient>
+<radialGradient id="wgg" cx="0" cy="0" r="170" gradientUnits="userSpaceOnUse"><stop offset=".8" stop-color="#E0242B" stop-opacity=".35"/><stop offset="1" stop-color="#E0242B" stop-opacity="0"/></radialGradient>
+<path id="wsg" d="M0,-144.5 A144.5,144.5 0 1,1 -0.01,-144.5"/>
+</defs><circle r="170" fill="url(#wgg)"/><g><circle r="161" fill="#111113"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(0)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(6)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(12)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(18)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(24)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(30)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(36)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(42)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(48)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(54)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(60)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(66)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(72)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(78)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(84)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(90)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(96)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(102)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(108)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(114)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(120)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(126)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(132)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(138)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(144)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(150)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(156)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(162)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(168)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(174)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(180)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(186)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(192)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(198)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(204)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(210)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(216)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(222)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(228)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(234)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(240)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(246)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(252)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(258)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(264)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(270)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(276)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(282)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(288)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(294)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(300)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(306)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(312)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(318)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(324)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(330)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(336)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(342)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(348)"/><rect x="-4.2" y="-162" width="8.4" height="11" rx="1.6" fill="#24242A" transform="rotate(354)"/><circle r="150.5" fill="#0E0E10"/><text font-family="Barlow, Arial, sans-serif" font-weight="700" font-size="7.4" letter-spacing="1.9" fill="#4A4A52"><textPath href="#wsg">GARAGE FULL THROTTLE  ·  SPIN TO WIN  ·  GARAGE FULL THROTTLE  ·  SPIN TO WIN  ·  GARAGE FULL THROTTLE  ·  SPIN TO WIN  ·  </textPath></text><circle r="139.5" fill="#2C2C32" stroke="#E0242B" stroke-width="2"/><path d="M0 0L0.00 -135.00A135 135 0 0 1 95.46 -95.46Z" fill="url(#wrg)" stroke="#0B0B0D" stroke-width="2"/><path d="M0 0L95.46 -95.46A135 135 0 0 1 135.00 0.00Z" fill="url(#wdg)" stroke="#0B0B0D" stroke-width="2"/><path d="M0 0L135.00 0.00A135 135 0 0 1 95.46 95.46Z" fill="url(#wrg)" stroke="#0B0B0D" stroke-width="2"/><path d="M0 0L95.46 95.46A135 135 0 0 1 0.00 135.00Z" fill="url(#wdg)" stroke="#0B0B0D" stroke-width="2"/><path d="M0 0L0.00 135.00A135 135 0 0 1 -95.46 95.46Z" fill="url(#wrg)" stroke="#0B0B0D" stroke-width="2"/><path d="M0 0L-95.46 95.46A135 135 0 0 1 -135.00 0.00Z" fill="url(#wdg)" stroke="#0B0B0D" stroke-width="2"/><path d="M0 0L-135.00 0.00A135 135 0 0 1 -95.46 -95.46Z" fill="url(#wrg)" stroke="#0B0B0D" stroke-width="2"/><path d="M0 0L-95.46 -95.46A135 135 0 0 1 -0.00 -135.00Z" fill="url(#wdg)" stroke="#0B0B0D" stroke-width="2"/><g transform="rotate(22.5)" color="#FFFFFF"><g transform="translate(-11 -125) scale(.92)" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.5"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M5.6 18.4l1.8-1.8M16.6 7.4l1.8-1.8"/></g><text y="-77" text-anchor="middle" font-family="Barlow Condensed, Arial Narrow, Arial, sans-serif" font-style="italic" font-weight="700" font-size="18" fill="#FFFFFF">TYRES</text><text y="-62" text-anchor="middle" font-family="Barlow, Arial, sans-serif" font-weight="700" font-size="9.5" letter-spacing="1.5" fill="#FFFFFF" fill-opacity=".85">4+1</text></g><g transform="rotate(67.5)" color="#FFFFFF"><g transform="translate(-11 -125) scale(.92)" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V5a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v16M3 21h13M4 10h11"/><path d="M15 8h2a2 2 0 0 1 2 2v6.5a1.5 1.5 0 0 0 3 0V9l-3-3"/></g><text y="-77" text-anchor="middle" font-family="Barlow Condensed, Arial Narrow, Arial, sans-serif" font-style="italic" font-weight="700" font-size="18" fill="#FFFFFF">$50</text><text y="-62" text-anchor="middle" font-family="Barlow, Arial, sans-serif" font-weight="700" font-size="9.5" letter-spacing="1.5" fill="#FFFFFF" fill-opacity=".85">FUEL</text></g><g transform="rotate(112.5)" color="#FFFFFF"><g transform="translate(-11 -125) scale(.92)" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3"/><path d="M12 6.8h.01M17.2 12h.01M12 17.2h.01M6.8 12h.01"/><path d="M15.5 2.8a10 10 0 0 1 5.7 6.4" stroke-width="3.2"/></g><text y="-77" text-anchor="middle" font-family="Barlow Condensed, Arial Narrow, Arial, sans-serif" font-style="italic" font-weight="700" font-size="18" fill="#FFFFFF">20%</text><text y="-62" text-anchor="middle" font-family="Barlow, Arial, sans-serif" font-weight="700" font-size="9.5" letter-spacing="1.5" fill="#FFFFFF" fill-opacity=".85">BRAKES</text></g><g transform="rotate(157.5)" color="#FFFFFF"><g transform="translate(-11 -125) scale(.92)" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18Q12 3 21 18"/><path d="M12 19 7 8.5"/><circle cx="12" cy="19" r="1.6"/></g><text y="-77" text-anchor="middle" font-family="Barlow Condensed, Arial Narrow, Arial, sans-serif" font-style="italic" font-weight="700" font-size="18" fill="#FFFFFF">FREE</text><text y="-62" text-anchor="middle" font-family="Barlow, Arial, sans-serif" font-weight="700" font-size="9.5" letter-spacing="1.5" fill="#FFFFFF" fill-opacity=".85">WIPERS</text></g><g transform="rotate(202.5)" color="#FFFFFF"><g transform="translate(-11 -125) scale(.92)" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4c-3 4-6 7.3-6 10.6a6 6 0 0 0 12 0C17 11.3 14 8 11 4z"/><path d="M19.5 2.5v4M17.5 4.5h4"/></g><text y="-77" text-anchor="middle" font-family="Barlow Condensed, Arial Narrow, Arial, sans-serif" font-style="italic" font-weight="700" font-size="18" fill="#FFFFFF">WASH</text><text y="-62" text-anchor="middle" font-family="Barlow, Arial, sans-serif" font-weight="700" font-size="9.5" letter-spacing="1.5" fill="#FFFFFF" fill-opacity=".85">& WAX</text></g><g transform="rotate(247.5)" color="#FFFFFF"><g transform="translate(-11 -125) scale(.92)" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m8.5 12 2.5 2.5 4.5-5"/></g><text y="-77" text-anchor="middle" font-family="Barlow Condensed, Arial Narrow, Arial, sans-serif" font-style="italic" font-weight="700" font-size="18" fill="#FFFFFF">SAFETY</text><text y="-62" text-anchor="middle" font-family="Barlow, Arial, sans-serif" font-weight="700" font-size="9.5" letter-spacing="1.5" fill="#FFFFFF" fill-opacity=".85">CHECK</text></g><g transform="rotate(292.5)" color="#FFFFFF"><g transform="translate(-11 -125) scale(.92)" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5" width="19" height="13" rx="2"/><path d="M5.5 12h3l1.5-3.5 3 7 1.5-3.5h4"/><path d="M8 21h8"/></g><text y="-77" text-anchor="middle" font-family="Barlow Condensed, Arial Narrow, Arial, sans-serif" font-style="italic" font-weight="700" font-size="18" fill="#FFFFFF">SCAN</text><text y="-62" text-anchor="middle" font-family="Barlow, Arial, sans-serif" font-weight="700" font-size="9.5" letter-spacing="1.5" fill="#FFFFFF" fill-opacity=".85">REPORT</text></g><g transform="rotate(337.5)" color="#FFFFFF"><g transform="translate(-11 -125) scale(.92)" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></g><text y="-77" text-anchor="middle" font-family="Barlow Condensed, Arial Narrow, Arial, sans-serif" font-style="italic" font-weight="700" font-size="18" fill="#FFFFFF">NO</text><text y="-62" text-anchor="middle" font-family="Barlow, Arial, sans-serif" font-weight="700" font-size="9.5" letter-spacing="1.5" fill="#FFFFFF" fill-opacity=".85">LUCK</text></g><circle r="31" fill="#0B0B0D" stroke="#E0242B" stroke-width="3"/><circle cx="0.00" cy="-18.00" r="3.4" fill="#3A3A42" stroke="#5A5A62" stroke-width="1"/><circle cx="17.12" cy="-5.56" r="3.4" fill="#3A3A42" stroke="#5A5A62" stroke-width="1"/><circle cx="10.58" cy="14.56" r="3.4" fill="#3A3A42" stroke="#5A5A62" stroke-width="1"/><circle cx="-10.58" cy="14.56" r="3.4" fill="#3A3A42" stroke="#5A5A62" stroke-width="1"/><circle cx="-17.12" cy="-5.56" r="3.4" fill="#3A3A42" stroke="#5A5A62" stroke-width="1"/></g><text y="4.5" text-anchor="middle" font-family="Barlow Condensed, Arial Narrow, Arial, sans-serif" font-style="italic" font-weight="700" font-size="13" fill="#FFFFFF">GFT</text></svg></div>
+    <ul class="anat">
+      <li><b>Tread</b><span>60 tread blocks around the edge. In the app they can motion-blur while the wheel spins and sharpen as it slows.</span></li>
+      <li><b>Sidewall</b><span>"Garage Full Throttle · Spin to win" lettered around the tyre, the way a brand name sits on a real one.</span></li>
+      <li><b>Rim</b><span>A thin red lip between the tyre and the prizes, the same red as the brand.</span></li>
+      <li><b>Prizes</b><span>Alternating red and charcoal, as today. Each has an icon, a short headline and a second line.</span></li>
+      <li><b>Hub</b><span>An alloy centre with five wheel nuts. The GFT mark stays upright while everything else turns.</span></li>
+      <li><b>Pointer</b><span>A red pin with a white outline, so it reads clearly against both segment colours.</span></li>
+    </ul>
+  </div>
+  <div class="coupons"><svg width="300" height="96" viewBox="0 0 300 96">
+<defs><mask id="mtyres"><rect width="300" height="96" fill="#fff"/><circle cx="74" cy="0" r="8" fill="#000"/><circle cx="74" cy="96" r="8" fill="#000"/></mask>
+<linearGradient id="styres" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FF4A50"/><stop offset="1" stop-color="#9E1419"/></linearGradient></defs>
+<g mask="url(#mtyres)">
+<rect width="300" height="96" rx="14" fill="#1B1B1F"/>
+<rect width="74" height="96" fill="url(#styres)"/>
+<rect x=".75" y=".75" width="298.5" height="94.5" rx="13.25" fill="none" stroke="#FFFFFF" stroke-opacity=".1" stroke-width="1.5"/>
+</g>
+<path d="M74 12v72" stroke="#3A3A42" stroke-width="1.6" stroke-dasharray="3 3"/>
+<g transform="translate(23 34) scale(1.2)" color="#FFFFFF" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.5"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M5.6 18.4l1.8-1.8M16.6 7.4l1.8-1.8"/></g>
+<text x="90" y="36" font-family="Barlow Condensed, Arial Narrow, Arial, sans-serif" font-style="italic" font-weight="700" font-size="22" fill="#FFFFFF">Tyres 4+1</text>
+<text x="90" y="54" font-family="Barlow, Arial, sans-serif" font-size="12" fill="#A1A1AA">Buy 4 tyres, 5th free*</text>
+<text x="90" y="78" font-family="Barlow, Arial, sans-serif" font-weight="700" font-size="10" letter-spacing="1.4" fill="#FF8A8E">USE BY 30 NOV</text>
+<text x="286" y="78" text-anchor="end" font-family="Barlow Condensed, Arial Narrow, Arial, sans-serif" font-weight="600" font-size="13" letter-spacing="1.5" fill="#E4E4E7">GFT-7K2Q</text>
+</svg><svg width="300" height="96" viewBox="0 0 300 96">
+<defs><mask id="mfuel"><rect width="300" height="96" fill="#fff"/><circle cx="74" cy="0" r="8" fill="#000"/><circle cx="74" cy="96" r="8" fill="#000"/></mask>
+<linearGradient id="sfuel" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FF4A50"/><stop offset="1" stop-color="#9E1419"/></linearGradient></defs>
+<g mask="url(#mfuel)">
+<rect width="300" height="96" rx="14" fill="#1B1B1F"/>
+<rect width="74" height="96" fill="url(#sfuel)"/>
+<rect x=".75" y=".75" width="298.5" height="94.5" rx="13.25" fill="none" stroke="#FFFFFF" stroke-opacity=".1" stroke-width="1.5"/>
+</g>
+<path d="M74 12v72" stroke="#3A3A42" stroke-width="1.6" stroke-dasharray="3 3"/>
+<g transform="translate(23 34) scale(1.2)" color="#FFFFFF" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V5a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v16M3 21h13M4 10h11"/><path d="M15 8h2a2 2 0 0 1 2 2v6.5a1.5 1.5 0 0 0 3 0V9l-3-3"/></g>
+<text x="90" y="36" font-family="Barlow Condensed, Arial Narrow, Arial, sans-serif" font-style="italic" font-weight="700" font-size="22" fill="#FFFFFF">$50 fuel</text>
+<text x="90" y="54" font-family="Barlow, Arial, sans-serif" font-size="12" fill="#A1A1AA">Fuel voucher</text>
+<text x="90" y="78" font-family="Barlow, Arial, sans-serif" font-weight="700" font-size="10" letter-spacing="1.4" fill="#FF8A8E">USE BY 30 NOV</text>
+<text x="286" y="78" text-anchor="end" font-family="Barlow Condensed, Arial Narrow, Arial, sans-serif" font-weight="600" font-size="13" letter-spacing="1.5" fill="#E4E4E7">GFT-7K2Q</text>
+</svg><svg width="300" height="96" viewBox="0 0 300 96">
+<defs><mask id="mbrakes"><rect width="300" height="96" fill="#fff"/><circle cx="74" cy="0" r="8" fill="#000"/><circle cx="74" cy="96" r="8" fill="#000"/></mask>
+<linearGradient id="sbrakes" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FF4A50"/><stop offset="1" stop-color="#9E1419"/></linearGradient></defs>
+<g mask="url(#mbrakes)">
+<rect width="300" height="96" rx="14" fill="#1B1B1F"/>
+<rect width="74" height="96" fill="url(#sbrakes)"/>
+<rect x=".75" y=".75" width="298.5" height="94.5" rx="13.25" fill="none" stroke="#FFFFFF" stroke-opacity=".1" stroke-width="1.5"/>
+</g>
+<path d="M74 12v72" stroke="#3A3A42" stroke-width="1.6" stroke-dasharray="3 3"/>
+<g transform="translate(23 34) scale(1.2)" color="#FFFFFF" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3"/><path d="M12 6.8h.01M17.2 12h.01M12 17.2h.01M6.8 12h.01"/><path d="M15.5 2.8a10 10 0 0 1 5.7 6.4" stroke-width="3.2"/></g>
+<text x="90" y="36" font-family="Barlow Condensed, Arial Narrow, Arial, sans-serif" font-style="italic" font-weight="700" font-size="22" fill="#FFFFFF">20% off brakes</text>
+<text x="90" y="54" font-family="Barlow, Arial, sans-serif" font-size="12" fill="#A1A1AA">Pads, discs, labour</text>
+<text x="90" y="78" font-family="Barlow, Arial, sans-serif" font-weight="700" font-size="10" letter-spacing="1.4" fill="#FF8A8E">USE BY 30 NOV</text>
+<text x="286" y="78" text-anchor="end" font-family="Barlow Condensed, Arial Narrow, Arial, sans-serif" font-weight="600" font-size="13" letter-spacing="1.5" fill="#E4E4E7">GFT-7K2Q</text>
+</svg><svg width="300" height="96" viewBox="0 0 300 96">
+<defs><mask id="mwipers"><rect width="300" height="96" fill="#fff"/><circle cx="74" cy="0" r="8" fill="#000"/><circle cx="74" cy="96" r="8" fill="#000"/></mask>
+<linearGradient id="swipers" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FF4A50"/><stop offset="1" stop-color="#9E1419"/></linearGradient></defs>
+<g mask="url(#mwipers)">
+<rect width="300" height="96" rx="14" fill="#1B1B1F"/>
+<rect width="74" height="96" fill="url(#swipers)"/>
+<rect x=".75" y=".75" width="298.5" height="94.5" rx="13.25" fill="none" stroke="#FFFFFF" stroke-opacity=".1" stroke-width="1.5"/>
+</g>
+<path d="M74 12v72" stroke="#3A3A42" stroke-width="1.6" stroke-dasharray="3 3"/>
+<g transform="translate(23 34) scale(1.2)" color="#FFFFFF" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18Q12 3 21 18"/><path d="M12 19 7 8.5"/><circle cx="12" cy="19" r="1.6"/></g>
+<text x="90" y="36" font-family="Barlow Condensed, Arial Narrow, Arial, sans-serif" font-style="italic" font-weight="700" font-size="22" fill="#FFFFFF">Free wipers</text>
+<text x="90" y="54" font-family="Barlow, Arial, sans-serif" font-size="12" fill="#A1A1AA">Front blades, fitted</text>
+<text x="90" y="78" font-family="Barlow, Arial, sans-serif" font-weight="700" font-size="10" letter-spacing="1.4" fill="#FF8A8E">USE BY 30 NOV</text>
+<text x="286" y="78" text-anchor="end" font-family="Barlow Condensed, Arial Narrow, Arial, sans-serif" font-weight="600" font-size="13" letter-spacing="1.5" fill="#E4E4E7">GFT-7K2Q</text>
+</svg><svg width="300" height="96" viewBox="0 0 300 96">
+<defs><mask id="mwash"><rect width="300" height="96" fill="#fff"/><circle cx="74" cy="0" r="8" fill="#000"/><circle cx="74" cy="96" r="8" fill="#000"/></mask>
+<linearGradient id="swash" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FF4A50"/><stop offset="1" stop-color="#9E1419"/></linearGradient></defs>
+<g mask="url(#mwash)">
+<rect width="300" height="96" rx="14" fill="#1B1B1F"/>
+<rect width="74" height="96" fill="url(#swash)"/>
+<rect x=".75" y=".75" width="298.5" height="94.5" rx="13.25" fill="none" stroke="#FFFFFF" stroke-opacity=".1" stroke-width="1.5"/>
+</g>
+<path d="M74 12v72" stroke="#3A3A42" stroke-width="1.6" stroke-dasharray="3 3"/>
+<g transform="translate(23 34) scale(1.2)" color="#FFFFFF" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4c-3 4-6 7.3-6 10.6a6 6 0 0 0 12 0C17 11.3 14 8 11 4z"/><path d="M19.5 2.5v4M17.5 4.5h4"/></g>
+<text x="90" y="36" font-family="Barlow Condensed, Arial Narrow, Arial, sans-serif" font-style="italic" font-weight="700" font-size="22" fill="#FFFFFF">Wash & wax</text>
+<text x="90" y="54" font-family="Barlow, Arial, sans-serif" font-size="12" fill="#A1A1AA">Free, with any booking</text>
+<text x="90" y="78" font-family="Barlow, Arial, sans-serif" font-weight="700" font-size="10" letter-spacing="1.4" fill="#FF8A8E">USE BY 30 NOV</text>
+<text x="286" y="78" text-anchor="end" font-family="Barlow Condensed, Arial Narrow, Arial, sans-serif" font-weight="600" font-size="13" letter-spacing="1.5" fill="#E4E4E7">GFT-7K2Q</text>
+</svg><svg width="300" height="96" viewBox="0 0 300 96">
+<defs><mask id="msafety"><rect width="300" height="96" fill="#fff"/><circle cx="74" cy="0" r="8" fill="#000"/><circle cx="74" cy="96" r="8" fill="#000"/></mask>
+<linearGradient id="ssafety" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FF4A50"/><stop offset="1" stop-color="#9E1419"/></linearGradient></defs>
+<g mask="url(#msafety)">
+<rect width="300" height="96" rx="14" fill="#1B1B1F"/>
+<rect width="74" height="96" fill="url(#ssafety)"/>
+<rect x=".75" y=".75" width="298.5" height="94.5" rx="13.25" fill="none" stroke="#FFFFFF" stroke-opacity=".1" stroke-width="1.5"/>
+</g>
+<path d="M74 12v72" stroke="#3A3A42" stroke-width="1.6" stroke-dasharray="3 3"/>
+<g transform="translate(23 34) scale(1.2)" color="#FFFFFF" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m8.5 12 2.5 2.5 4.5-5"/></g>
+<text x="90" y="36" font-family="Barlow Condensed, Arial Narrow, Arial, sans-serif" font-style="italic" font-weight="700" font-size="22" fill="#FFFFFF">Safety check</text>
+<text x="90" y="54" font-family="Barlow, Arial, sans-serif" font-size="12" fill="#A1A1AA">Tyres, brakes, lights, fluids*</text>
+<text x="90" y="78" font-family="Barlow, Arial, sans-serif" font-weight="700" font-size="10" letter-spacing="1.4" fill="#FF8A8E">USE BY 30 NOV</text>
+<text x="286" y="78" text-anchor="end" font-family="Barlow Condensed, Arial Narrow, Arial, sans-serif" font-weight="600" font-size="13" letter-spacing="1.5" fill="#E4E4E7">GFT-7K2Q</text>
+</svg><svg width="300" height="96" viewBox="0 0 300 96">
+<defs><mask id="mscan"><rect width="300" height="96" fill="#fff"/><circle cx="74" cy="0" r="8" fill="#000"/><circle cx="74" cy="96" r="8" fill="#000"/></mask>
+<linearGradient id="sscan" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FF4A50"/><stop offset="1" stop-color="#9E1419"/></linearGradient></defs>
+<g mask="url(#mscan)">
+<rect width="300" height="96" rx="14" fill="#1B1B1F"/>
+<rect width="74" height="96" fill="url(#sscan)"/>
+<rect x=".75" y=".75" width="298.5" height="94.5" rx="13.25" fill="none" stroke="#FFFFFF" stroke-opacity=".1" stroke-width="1.5"/>
+</g>
+<path d="M74 12v72" stroke="#3A3A42" stroke-width="1.6" stroke-dasharray="3 3"/>
+<g transform="translate(23 34) scale(1.2)" color="#FFFFFF" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5" width="19" height="13" rx="2"/><path d="M5.5 12h3l1.5-3.5 3 7 1.5-3.5h4"/><path d="M8 21h8"/></g>
+<text x="90" y="36" font-family="Barlow Condensed, Arial Narrow, Arial, sans-serif" font-style="italic" font-weight="700" font-size="22" fill="#FFFFFF">Scan report</text>
+<text x="90" y="54" font-family="Barlow, Arial, sans-serif" font-size="12" fill="#A1A1AA">Free diagnostic scan</text>
+<text x="90" y="78" font-family="Barlow, Arial, sans-serif" font-weight="700" font-size="10" letter-spacing="1.4" fill="#FF8A8E">USE BY 30 NOV</text>
+<text x="286" y="78" text-anchor="end" font-family="Barlow Condensed, Arial Narrow, Arial, sans-serif" font-weight="600" font-size="13" letter-spacing="1.5" fill="#E4E4E7">GFT-7K2Q</text>
+</svg></div>
+</section>
+
+<!-- ================= RULES ================= -->
+<section id="rules" aria-labelledby="h-rules">
+  <div class="sec-head">
+    <p class="eyebrow">04 · Before you ship</p>
+    <h2 id="h-rules">Rules for a prize game in an app</h2>
+    <p>A free spin-to-win wheel counts as a promotion with prizes. These are the checks to make before launch. This isn't legal advice; the garage should confirm the details.</p>
+  </div>
+  <div class="rules">
+    <div><b>Decide prizes on the server</b><span>The app asks the server for a result, the server records it, and only then does the wheel animate. A result picked inside the app can be faked.</span></div>
+    <div><b>App Store rules for contests</b><span>Apple's review guidelines (section 5.3) require official rules in the app and a statement that Apple isn't a sponsor. Google Play has its own contest policy, so check that too. The terms line under the wheel covers Apple's wording.</span></div>
+    <div><b>Australian promotion rules</b><span>Free games of chance with prizes can count as trade promotion lotteries. Permit rules differ between states and depend on the prize pool, so check for every state customers might play from.</span></div>
+    <div><b>Publish terms and odds</b><span>Who can play, spins per week, when they reset, how prizes are chosen, prize use-by dates, and what "No luck" means. Link both from the Spin tab.</span></div>
+    <div><b>Free to play</b><span>Keep spins free. Bonus spins for booking are fine to consider, but they shouldn't be the only way to play. Check this with whoever reviews the terms.</span></div>
+    <div><b>Track redemptions</b><span>Each prize gets a one-time code. Staff mark it used in the admin panel, so the same ticket can't be used twice.</span></div>
+  </div>
+</section>
+
+<!-- ================= FIXES ================= -->
+<section id="fixes" aria-labelledby="h-fix">
+  <div class="sec-head">
+    <p class="eyebrow">05 · What changes from today</p>
+    <h2 id="h-fix">Problems with the current tab</h2>
+  </div>
+  <div class="two">
+    <div class="skip">
+      <div><b>The spins pill is cut off</b><span>"3 spins left this week" slides under the header. It's replaced by the ticket row (1).</span></div>
+      <div><b>Wins have nowhere to go</b><span>There's no list of prizes won, no code and no use-by date. The wallet (5) fixes this.</span></div>
+      <div><b>A filler text box</b><span>"Tap spin for a chance to win…" takes a card's worth of space to say what the button already says. It becomes one line with a rules link.</span></div>
+      <div><b>Cryptic prize names</b><span>"Tyres 4+1" and "Scan report" need explaining. The tickets and prize list do that (6).</span></div>
+      <div><b>A refresh button</b><span>As on the other tabs, pull to refresh replaces it.</span></div>
+      <div><b>No rules or odds</b><span>There's no terms link yet, and launching without one risks App Store review problems (9).</span></div>
+    </div>
+    <figure class="today">
+      <img src="assets/images/current-spin.jpg" alt="Current Spin tab: spins pill cut off under the header, flat red and black wheel with eight prizes, a text box, a Spin the wheel button and an empty Recent attempts list.">
+      <figcaption>Spin tab today, for comparison.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ================= BUILD ================= -->
+<section id="build" aria-labelledby="h-build">
+  <div class="sec-head">
+    <p class="eyebrow">06 · Build order</p>
+    <h2 id="h-build">Ship it in three drops</h2>
+  </div>
+  <div class="phases">
+    <div class="phase">
+      <h3><span class="ph">Phase 1</span> · Look and feel</h3>
+      <p class="tagline">About 1–2 weeks.</p>
+      <ul>
+        <li>Tyre wheel, pointer, spin animation (2, 3)</li>
+        <li>Spin tickets with countdown (1)</li>
+        <li>Result sheet (4)</li>
+        <li>Terms and odds line (9)</li>
+      </ul>
+      <p class="needs"><b>Needs:</b> written terms; odds from the garage.</p>
+    </div>
+    <div class="phase">
+      <h3><span class="ph">Phase 2</span> · Prize wallet</h3>
+      <p class="tagline">About 2 weeks. Backend work.</p>
+      <ul>
+        <li>Server-decided results</li>
+        <li>My prizes tickets with codes and use-by (5, 6)</li>
+        <li>Recent spins (7)</li>
+        <li>Mark-as-used in the admin panel</li>
+      </ul>
+      <p class="needs"><b>Needs:</b> a prize table with odds and use-by; one-time codes; redemption logging.</p>
+    </div>
+    <div class="phase">
+      <h3><span class="ph">Phase 3</span> · Joined up</h3>
+      <p class="tagline">About 1–2 weeks.</p>
+      <ul>
+        <li>"Use a prize" step in the booking flow</li>
+        <li>Out-of-spins state + bonus spin, if approved (8)</li>
+        <li>Push notification on Monday reset</li>
+        <li>Countdown on the Home carousel (already in the Home proposal)</li>
+      </ul>
+      <p class="needs"><b>Needs:</b> agreement on bonus-spin rules.</p>
+    </div>
+  </div>
+</section>
+
+<footer>Prepared for Garage Full Throttle. The eight prizes, their order and 3 spins a week are taken from the current app. Prize descriptions, codes, use-by dates and odds are examples. The mockup picks prizes at random with demo odds; it is not the real game.</footer>
+</div>
+
+<script>
+(function(){
+  var ICONS={"tyres": "<circle cx=\"12\" cy=\"12\" r=\"9\"/><circle cx=\"12\" cy=\"12\" r=\"3.5\"/><path d=\"M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M5.6 18.4l1.8-1.8M16.6 7.4l1.8-1.8\"/>", "fuel": "<path d=\"M4 21V5a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v16M3 21h13M4 10h11\"/><path d=\"M15 8h2a2 2 0 0 1 2 2v6.5a1.5 1.5 0 0 0 3 0V9l-3-3\"/>", "brakes": "<circle cx=\"12\" cy=\"12\" r=\"8.5\"/><circle cx=\"12\" cy=\"12\" r=\"3\"/><path d=\"M12 6.8h.01M17.2 12h.01M12 17.2h.01M6.8 12h.01\"/><path d=\"M15.5 2.8a10 10 0 0 1 5.7 6.4\" stroke-width=\"3.2\"/>", "wipers": "<path d=\"M3 18Q12 3 21 18\"/><path d=\"M12 19 7 8.5\"/><circle cx=\"12\" cy=\"19\" r=\"1.6\"/>", "wash": "<path d=\"M11 4c-3 4-6 7.3-6 10.6a6 6 0 0 0 12 0C17 11.3 14 8 11 4z\"/><path d=\"M19.5 2.5v4M17.5 4.5h4\"/>", "safety": "<path d=\"M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z\"/><path d=\"m8.5 12 2.5 2.5 4.5-5\"/>", "scan": "<rect x=\"2.5\" y=\"5\" width=\"19\" height=\"13\" rx=\"2\"/><path d=\"M5.5 12h3l1.5-3.5 3 7 1.5-3.5h4\"/><path d=\"M8 21h8\"/>", "noluck": "<path d=\"M3 12a9 9 0 1 0 3-6.7L3 8\"/><path d=\"M3 3v5h5\"/>"};
+  var P=[
+    {k:'tyres', w:'Tyres 4+1', n:'Tyres 4+1', d:'Buy 4 tyres, get the 5th free', use:'60 days', odds:2, c:true},
+    {k:'fuel',  w:'$50 Fuel', n:'$50 fuel', d:'$50 fuel voucher, collected at the garage', use:'30 days', odds:3},
+    {k:'brakes',w:'20% Brakes', n:'20% off brakes', d:'20% off brake pads, discs and labour', use:'60 days', odds:8},
+    {k:'wipers',w:'Wipers', n:'Free wipers', d:'Front wiper blades supplied and fitted', use:'30 days', odds:12},
+    {k:'wash',  w:'Wash & Wax', n:'Wash & wax', d:'Free wash and wax with any booking', use:'30 days', odds:12},
+    {k:'safety',w:'Safety check', n:'Safety check', d:'Free safety check (tyres, brakes, lights, fluids)', use:'60 days', odds:10, c:true},
+    {k:'scan',  w:'Scan report', n:'Scan report', d:'Free diagnostic scan with a written report', use:'60 days', odds:13, c:true},
+    {k:'noluck',w:'No luck', n:'No luck', d:'No prize. The spin still counts', use:'—', odds:40}
+  ];
+  function ic(k,cls){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"'+(cls?' class="'+cls+'"':'')+'>'+ICONS[k]+'</svg>';}
+
+  /* prize table */
+  document.getElementById('ptbody').innerHTML=P.map(function(p,i){
+    var bg=i%2===0?'linear-gradient(160deg,#ff4a50,#9e1419)':'#26262b';
+    return '<tr><td><span class="w"><span class="sw" style="background:'+bg+'">'+ic(p.k)+'</span>'+p.w+'</span></td><td>'+p.d+(p.c?'<span class="cf">Confirm</span>':'')+'</td><td>'+p.use+'</td><td class="num">'+p.odds+'%</td></tr>';
+  }).join('');
+
+  var screen=document.getElementById('screen'), phone=document.getElementById('phone');
+  var rot=document.getElementById('wrot'), spinbtn=document.getElementById('spinbtn');
+  var TOK_ON='<svg width="40" height="28" viewBox="0 0 40 28"><path d="M3 3h34v7a4 4 0 0 0 0 8v7H3v-7a4 4 0 0 0 0-8z" fill="#E0242B" stroke="#FF4A50" stroke-width="2" stroke-linejoin="round"/><path d="M14 6v16" stroke="#FFFFFF" stroke-width="1.6" stroke-dasharray="2 2"/><path d="M24 9l1.6 3.3 3.6.5-2.6 2.5.6 3.6-3.2-1.7-3.2 1.7.6-3.6-2.6-2.5 3.6-.5z" fill="#FFFFFF"/></svg>', TOK_OFF='<svg width="40" height="28" viewBox="0 0 40 28"><path d="M3 3h34v7a4 4 0 0 0 0 8v7H3v-7a4 4 0 0 0 0-8z" fill="none" stroke="#44444C" stroke-width="2" stroke-linejoin="round"/><path d="M14 6v16" stroke="#44444C" stroke-width="1.6" stroke-dasharray="2 2"/><path d="M24 9l1.6 3.3 3.6.5-2.6 2.5.6 3.6-3.2-1.7-3.2 1.7.6-3.6-2.6-2.5 3.6-.5z" fill="#44444C"/></svg>';
+  var codes=['GFT-7K2Q','GFT-3HMX','GFT-9PLA','GFT-R4TD','GFT-W8ZE','GFT-5NBC'], ci=0;
+  var S, angle=0, busy=false;
+
+  function fresh(){ return {spins:3, wallet:[{k:'wash',code:'GFT-2QJV',use:'Use by 24 Nov'}], att:[{k:'wash',when:'Last Tue',s:'Saved'},{k:'noluck',when:'Last Mon',s:''},{k:'noluck',when:'Last Mon',s:''}]}; }
+  function out(){ return {spins:0, wallet:[{k:'brakes',code:'GFT-8TRW',use:'Use by 2 Jan'},{k:'wash',code:'GFT-2QJV',use:'Use by 24 Nov'}], att:[{k:'noluck',when:'Today',s:''},{k:'brakes',when:'Today',s:'Saved'},{k:'noluck',when:'Mon',s:''}]}; }
+
+  function nextMonday(){ var now=new Date(), n=new Date(now); n.setHours(0,0,0,0); var add=(8-n.getDay())%7; if(add===0) add=7; n.setDate(n.getDate()+add); return n-now; }
+  function fmtLeft(ms,sec){ var d=Math.floor(ms/864e5),h=Math.floor(ms/36e5)%24,m=Math.floor(ms/6e4)%60,s=Math.floor(ms/1e3)%60; return d+'d '+h+'h'+(sec?' '+String(m).padStart(2,'0')+'m '+String(s).padStart(2,'0')+'s':''); }
+
+  function render(){
+    var tk=''; for(var i=0;i<3;i++){ tk+='<span class="'+(i<S.spins?'':'used')+'">'+(i<S.spins?TOK_ON:TOK_OFF)+'</span>'; }
+    document.getElementById('tk').innerHTML=tk;
+    document.getElementById('tk-t').textContent = S.spins===0 ? 'No spins left this week' : S.spins+(S.spins===1?' spin':' spins')+' left this week';
+    var locked=S.spins===0;
+    document.getElementById('wheelbox').classList.toggle('locked',locked && !busy);
+    document.getElementById('lockov').hidden=!(locked && !busy);
+    document.getElementById('bonus').hidden=!(locked && !busy);
+    spinbtn.disabled=locked||busy;
+    spinbtn.innerHTML = busy ? 'Spinning…' : (locked ? 'No spins left' : 'Spin the wheel <svg class="i lg" style="stroke-width:2.4"><use href="#i-spin"/></svg>');
+    var w=document.getElementById('wallet');
+    w.innerHTML = S.wallet.length ? S.wallet.map(function(c,i){ var p=P.filter(function(x){return x.k===c.k;})[0];
+      return '<div class="cp'+(c.isNew?' new':'')+'"><div class="stub">'+ic(c.k)+'</div><div class="bd"><b>'+p.n+'</b><small>'+p.d+'</small><div class="ft"><span>'+c.use.toUpperCase()+'</span><code>'+c.code+'</code></div></div></div>'; }).join('')
+      : '<div class="empty-w" style="flex:1">Prizes you win show up here as tickets.</div>';
+    S.wallet.forEach(function(c){c.isNew=false;});
+    document.getElementById('w-count').textContent = S.wallet.length+' to use';
+    var a=document.getElementById('att'), mk=a.querySelector('.mk').outerHTML;
+    a.innerHTML=mk+S.att.slice(0,4).map(function(r){ var p=P.filter(function(x){return x.k===r.k;})[0], miss=r.k==='noluck';
+      return '<div class="r'+(miss?' miss':'')+'"><span class="ic">'+ic(r.k)+'</span><span class="t"><b>'+(miss?'No luck':p.n)+'</b><small>'+r.when+'</small></span><span class="s">'+(miss?'—':r.s)+'</span></div>'; }).join('');
+  }
+  function tick(){
+    var ms=nextMonday();
+    document.getElementById('tk-s').textContent='Resets Monday · '+fmtLeft(ms,false);
+    document.getElementById('lock-t').textContent='New spins in '+fmtLeft(ms,true);
+  }
+
+  function pick(){ var r=Math.random()*100, acc=0; for(var i=0;i<P.length;i++){ acc+=P[i].odds; if(r<acc) return i; } return P.length-1; }
+  function spin(){
+    if(busy||S.spins<=0) return;
+    var i=pick(); busy=true; S.spins--; render();
+    var target=(360-(i*45+22.5))%360, jitter=(Math.random()*30-15);
+    var cur=((angle%360)+360)%360, delta=(target+jitter-cur+360)%360;
+    angle += 360*5 + delta;
+    rot.style.transform='rotate('+angle+'deg)';
+    var done=false;
+    function finish(){ if(done) return; done=true; busy=false; result(i); }
+    rot.addEventListener('transitionend',finish,{once:true});
+    setTimeout(finish, matchMedia('(prefers-reduced-motion: reduce)').matches?500:4900);
+  }
+  function result(i){
+    var p=P[i], miss=p.k==='noluck', res=document.getElementById('res');
+    var useBy=new Date(); useBy.setDate(useBy.getDate()+(p.use==='60 days'?60:30));
+    var ub=useBy.toLocaleDateString('en-AU',{day:'numeric',month:'short'});
+    if(!miss){ var code=codes[ci++%codes.length]; S.wallet.unshift({k:p.k,code:code,use:'Use by '+ub,isNew:true}); }
+    S.att.unshift({k:p.k,when:'Just now',s:miss?'':'Saved'});
+    res.classList.toggle('miss',miss);
+    document.getElementById('res-ic').innerHTML=ic(p.k);
+    document.getElementById('res-k').textContent=miss?'Not this time':'You won';
+    document.getElementById('res-h').textContent=miss?'No luck':p.n;
+    document.getElementById('res-p').textContent=miss ? (S.spins? S.spins+(S.spins===1?' spin':' spins')+' left this week. Good luck!' : 'That was your last spin this week. New spins on Monday.') : p.d+'. Saved to My prizes, use by '+ub+'.';
+    var a=document.getElementById('res-a'), b=document.getElementById('res-b');
+    a.textContent = miss ? (S.spins?'Spin again':'OK') : 'Use on a booking';
+    b.textContent = miss ? 'Close' : (S.spins?'Spin again':'Close');
+    a.onclick=function(){ close(); if(miss && S.spins) setTimeout(spin,250); };
+    b.onclick=function(){ close(); if(!miss && S.spins) setTimeout(spin,250); };
+    var conf=document.getElementById('conf'); conf.innerHTML='';
+    if(!miss && !matchMedia('(prefers-reduced-motion: reduce)').matches){
+      var cols=['#E0242B','#FF4A50','#FFFFFF','#F5A524'];
+      for(var k=0;k<22;k++){ var s=document.createElement('i'); s.style.left=(Math.random()*100)+'%'; s.style.background=cols[k%4]; s.style.animationDelay=(Math.random()*0.4)+'s'; conf.appendChild(s); }
+    }
+    res.hidden=false; render();
+  }
+  function close(){ document.getElementById('res').hidden=true; render(); }
+  spinbtn.addEventListener('click',spin);
+
+  function setState(k){
+    S = k==='out'?out():fresh(); busy=false; document.getElementById('res').hidden=true;
+    document.querySelectorAll('#seg-state button').forEach(function(b){ b.setAttribute('aria-pressed',String(b.dataset.state===k)); });
+    render();
+  }
+  document.querySelectorAll('#seg-state button').forEach(function(b){ b.addEventListener('click',function(){ setState(b.dataset.state); }); });
+  document.querySelectorAll('.see').forEach(function(b){ b.addEventListener('click',function(){ setState(b.dataset.go);
+    var top=phone.getBoundingClientRect().top; if(top<-120||top>window.innerHeight*0.6) phone.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'}); }); });
+  document.querySelectorAll('#seg-bg button').forEach(function(b){ b.addEventListener('click',function(){
+    screen.setAttribute('data-bg',b.dataset.bg);
+    document.querySelectorAll('#seg-bg button').forEach(function(x){ x.setAttribute('aria-pressed',String(x===b)); }); }); });
+  var mk=document.getElementById('mk-toggle');
+  mk.addEventListener('click',function(){ var on=mk.getAttribute('aria-pressed')!=='true'; mk.setAttribute('aria-pressed',String(on)); phone.classList.toggle('nomk',!on); });
+
+  setState('fresh'); tick(); setInterval(tick,1000);
+})();
+</script>
+
+</body>
+</html>
