@@ -1,0 +1,647 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>GFT Points History Refresh</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,600;0,700;1,700&family=Barlow:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: same proposal system as the five tab proposals. Left = live phone mockup, right = numbered notes. */
+:root{
+  --bg:#0B0B0D; --bg-2:#111114; --panel:#18181B; --line:#2A2A31;
+  --fg:#F4F4F5; --muted:#A1A1AA; --dim:#71717A;
+  --red:#E0242B; --red-hot:#FF4A50; --red-deep:#9E1419;
+  --amber:#F5A524; --green:#2DC66B; --silver:#C9CDD3; --gold:#D4A84A;
+  --display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+  --body:"Barlow",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --ios:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+img{max-width:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.55;
+  background-image:radial-gradient(90% 420px at 50% -120px,rgba(224,36,43,.22),transparent 70%);background-repeat:no-repeat}
+.wrap{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:48px 80px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;letter-spacing:.01em}
+h1{font-size:clamp(44px,8vw,84px);line-height:.92;font-style:italic;font-weight:700;text-transform:uppercase}
+h1 em{color:var(--red-hot);font-style:italic}
+h2{font-size:clamp(30px,4.4vw,44px);line-height:1;text-transform:uppercase;font-weight:700}
+h3{font-size:22px;line-height:1.1;font-weight:600}
+p{margin:0}
+.eyebrow{font-weight:600;font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+.lede{font-size:19px;color:#D4D4D8;max-width:62ch}
+:focus-visible{outline:2px solid var(--red-hot);outline-offset:3px;border-radius:6px}
+header.top{display:grid;gap:20px;padding-bottom:40px;border-bottom:1px solid var(--line)}
+.brief{display:flex;flex-wrap:wrap;gap:10px;margin-top:6px}
+.brief span{border:1px solid var(--line);background:var(--bg-2);border-radius:999px;padding:6px 14px;font-size:14px;color:#D4D4D8}
+.brief b{color:var(--fg);font-weight:600}
+.brief span.kept{border-color:rgba(45,198,107,.45)}
+.brief span.kept b{color:#7fe3a6}
+section{padding-top:64px;display:grid;gap:28px}
+.sec-head{display:grid;gap:10px;max-width:70ch}
+.sec-head p{color:var(--muted)}
+.controls{display:flex;flex-wrap:wrap;gap:18px 28px;align-items:flex-end}
+.ctl{display:grid;gap:8px}
+.ctl > span{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);font-weight:600}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{font:500 14px var(--body);color:var(--muted);background:var(--bg-2);border:1px solid var(--line);border-radius:999px;padding:7px 14px;cursor:pointer}
+.seg button[aria-pressed="true"]{color:var(--fg);border-color:var(--red);background:rgba(224,36,43,.14)}
+.seg button:hover{color:var(--fg)}
+.stage{display:grid;grid-template-columns:minmax(0,395px) minmax(0,1fr);gap:48px;align-items:start}
+.phone-col{position:sticky;top:calc(env(safe-area-inset-top,0px) + 16px)}
+@media (max-width:900px){.stage{grid-template-columns:minmax(0,1fr)}.phone-col{position:static;justify-self:center;width:100%;max-width:395px}}
+.notes{list-style:none;margin:0;padding:0;display:grid;gap:14px}
+.note{display:grid;grid-template-columns:34px minmax(0,1fr);gap:4px 14px;padding:18px 18px 18px 14px;background:var(--bg-2);border:1px solid var(--line);border-radius:16px}
+.note .num{grid-row:span 3;width:30px;height:30px;border-radius:50%;background:var(--red);color:#fff;font:700 16px var(--display);display:grid;place-items:center}
+.note h3{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.from{font-size:14px;color:var(--dim)}
+.from b{color:var(--muted);font-weight:500}
+.note p.d{color:#D4D4D8;font-size:15.5px}
+.note .see{grid-column:2;font:600 12.5px var(--body);color:var(--red-hot);background:none;border:0;padding:0;cursor:pointer;text-align:left;justify-self:start}
+.note .see:hover{text-decoration:underline}
+.effort{font:600 11px var(--body);letter-spacing:.12em;text-transform:uppercase;border-radius:999px;padding:3px 9px;border:1px solid}
+.e1{color:var(--green);border-color:rgba(45,198,107,.4)}
+.e2{color:var(--amber);border-color:rgba(245,165,36,.4)}
+.e3{color:var(--red-hot);border-color:rgba(255,74,80,.45)}
+.note.hl{border-color:rgba(224,36,43,.6)}
+
+/* ================= PHONE ================= */
+.phone{width:100%;max-width:395px;margin:0 auto;border-radius:52px;padding:10px;background:linear-gradient(145deg,#2a2a30,#121215 40%,#26262c);box-shadow:0 40px 80px -30px rgba(0,0,0,.9),0 0 0 1px #34343b}
+.screen{position:relative;border-radius:42px;overflow:hidden;font-family:var(--ios);color:#fff;-webkit-font-smoothing:antialiased;font-size:15px;line-height:1.3;min-height:812px;display:flex;flex-direction:column}
+.screen > *{position:relative;z-index:1}
+.bgfx{background-color:#0B0B0D;background-repeat:no-repeat;background-position:top center;background-size:100% auto}
+[data-bg="carbon"]{background-image:url("assets/backgrounds/bg-carbon-taillight.svg")}
+[data-bg="glow"]{background-image:url("assets/backgrounds/bg-taillight-glow.svg")}
+[data-bg="tread"]{background-image:url("assets/backgrounds/bg-tyre-tread.svg")}
+[data-bg="contour"]{background-image:url("assets/backgrounds/bg-contour-lines.svg")}
+[data-bg="streaks"]{background-image:url("assets/backgrounds/bg-speed-lines.svg")}
+.sb{display:flex;justify-content:space-between;align-items:center;padding:16px 30px 6px;font-weight:600;font-size:15px}
+.sb .ic{display:flex;gap:6px;align-items:center}
+.pad{padding:0 16px;flex:1}
+.icbtn{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);color:#fff;flex:none}
+.subhead{display:flex;align-items:center;gap:12px;padding:10px 16px 8px}
+.subhead h4{margin:0;font-size:26px;font-weight:700;flex:1;letter-spacing:-.01em}
+.blk{position:relative}
+.mk{position:absolute;left:-8px;top:-8px;width:20px;height:20px;border-radius:50%;background:var(--red);color:#fff;font:700 12px/20px var(--display);text-align:center;z-index:5;box-shadow:0 0 0 2px #0B0B0D}
+.phone.nomk .mk{display:none}
+svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+svg.i.sm{width:15px;height:15px}
+svg.i.lg{width:24px;height:24px}
+.card{background:rgba(24,24,27,.95);border:1px solid #2a2a31;border-radius:18px;padding:14px}
+
+/* hero */
+.hero{margin-top:6px;padding:16px;background:linear-gradient(150deg,rgba(224,36,43,.22),rgba(24,24,27,.96) 55%);border-color:rgba(224,36,43,.45)}
+.hero.t2{background:linear-gradient(150deg,rgba(201,205,211,.18),rgba(24,24,27,.96) 55%);border-color:rgba(201,205,211,.45)}
+.hero.nm{background:rgba(24,24,27,.95);border-color:#2a2a31}
+.hero .top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.hero small.k{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#c4c4cc;font-weight:700}
+.hero .bal{display:flex;align-items:center;gap:10px;margin-top:6px}
+.hero .bal b{font:700 48px/1 var(--ios);letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.hero .bal span{font-size:16px;color:#c4c4cc;font-weight:600;align-self:flex-end;margin-bottom:6px}
+.coin{width:34px;height:34px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ff6a6f,var(--red) 55%,var(--red-deep));display:grid;place-items:center;font:700 17px var(--display);color:#fff;box-shadow:inset 0 0 0 2.5px rgba(255,255,255,.25);flex:none}
+.tierb{font-size:11.5px;font-weight:700;border-radius:999px;padding:5px 10px;white-space:nowrap}
+.tierb.t1{background:var(--red);color:#fff}
+.tierb.t2{background:var(--silver);color:#141518}
+.tierb.nm{border:1px solid #55555d;color:#c4c4cc}
+.prog{margin-top:14px}
+.prog .bar{height:8px;border-radius:4px;background:#2e2e35;position:relative;overflow:hidden}
+.prog .bar i{position:absolute;left:0;top:0;bottom:0;border-radius:4px;background:linear-gradient(90deg,#9e1419,#ff4a50)}
+.hero.t2 .prog .bar i{background:linear-gradient(90deg,#8a8e95,#e6e9ee)}
+.prog .ends{display:flex;justify-content:space-between;font-size:11px;color:#9a9aa3;margin-top:5px;font-variant-numeric:tabular-nums}
+.prog p{font-size:13px;color:#e4e4e7;margin-top:8px}
+.prog p b{color:#ff8a8e}
+.hero.t2 .prog p b{color:#e6e9ee}
+.rate{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:12.5px;color:#c4c4cc;background:rgba(0,0,0,.25);border-radius:10px;padding:7px 10px}
+.rate b{color:#fff}
+
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.stats div{background:rgba(24,24,27,.95);border:1px solid #2a2a31;border-radius:14px;padding:10px;display:grid;gap:2px}
+.stats small{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#9a9aa3;font-weight:700}
+.stats b{font-size:18px;font-variant-numeric:tabular-nums}
+
+.chips{display:flex;gap:6px;margin-top:16px;overflow-x:auto;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chips button{flex:none;font:600 13px var(--ios);border-radius:999px;padding:7px 13px;border:1px solid #33333a;color:#c4c4cc;background:rgba(24,24,27,.9);cursor:pointer}
+.chips button[aria-pressed="true"]{background:#fff;color:#111;border-color:#fff}
+
+.month{display:flex;justify-content:space-between;align-items:baseline;margin:18px 0 8px}
+.month b{font:italic 700 21px/1 var(--display);text-transform:uppercase;letter-spacing:.02em}
+.month span:not(.mk){font-size:12.5px;color:#a1a1aa;font-variant-numeric:tabular-nums}
+.month span em{font-style:normal;color:#5fe08f;font-weight:700}
+.list{background:rgba(24,24,27,.95);border:1px solid #2a2a31;border-radius:18px;padding:0 14px}
+.en{display:grid;grid-template-columns:38px minmax(0,1fr) auto;gap:2px 12px;align-items:center;padding:12px 0;border-bottom:1px solid #26262b;cursor:pointer;position:relative;width:100%;background:none;border-left:0;border-right:0;border-top:0;color:inherit;text-align:left;font:inherit}
+.en:last-child{border-bottom:0}
+.en:hover .tt b{text-decoration:underline;text-decoration-color:#55555d}
+.en .ic{grid-row:span 2;width:38px;height:38px;border-radius:12px;display:grid;place-items:center}
+.en .tt{min-width:0}
+.en .tt b{display:block;font-size:14.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.en .tt small{color:#9a9aa3;font-size:12px;display:block}
+.en .tt .ref{display:inline-block;font:600 10.5px var(--ios);letter-spacing:.04em;color:#c4c4cc;background:#26262b;border-radius:5px;padding:1px 5px;margin-left:4px;vertical-align:1px}
+.en .pt{grid-row:span 2;text-align:right;font-weight:700;font-size:16px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.en .pt small{display:block;font-size:11px;font-weight:500;color:#8a8a93}
+.en .pt.plus{color:#5fe08f}
+.en .pt.minus{color:#ff8a8e}
+.en .pt.zero{color:#e3c27a}
+.en.mile{background:linear-gradient(90deg,rgba(201,205,211,.1),transparent);margin:0 -14px;padding-left:14px;padding-right:14px;width:calc(100% + 28px)}
+.k-job{background:rgba(224,36,43,.15);color:#ff6a6f}
+.k-bonus{background:rgba(45,198,107,.14);color:#5fe08f}
+.k-tier{background:rgba(201,205,211,.16);color:#e6e9ee}
+.k-ref{background:rgba(245,165,36,.14);color:var(--amber)}
+.k-adj{background:#26262b;color:#a1a1aa}
+.upsell{margin-top:10px;display:flex;gap:10px;align-items:center;border-radius:14px;padding:10px 12px;background:linear-gradient(110deg,rgba(224,36,43,.25),rgba(24,24,27,.95) 70%);border:1px solid rgba(224,36,43,.5);font-size:13px}
+.upsell b{color:#fff}
+.upsell .go{margin-left:auto;background:#fff;color:#111;font-weight:700;font-size:12.5px;border-radius:999px;padding:6px 11px;white-space:nowrap}
+.foot{font-size:12px;color:#8a8a93;text-align:center;margin:16px 0 4px}
+.foot a{color:#c4c4cc;text-decoration:underline}
+.tapnote{font-size:11.5px;color:#8a8a93;text-align:center;margin-top:8px}
+
+/* detail sheet */
+.sheet{position:absolute!important;inset:0;z-index:20!important;display:grid;align-items:end;background:rgba(0,0,0,.55);backdrop-filter:blur(3px)}
+.sheet .sh{background:#141417;border-top:1px solid #2e2e35;border-radius:28px 28px 0 0;padding:12px 18px 34px;display:grid;gap:12px;animation:up .35s cubic-bezier(.2,.9,.3,1)}
+@keyframes up{from{transform:translateY(100%)}to{transform:none}}
+.sheet .grab{width:38px;height:5px;border-radius:3px;background:#3a3a42;justify-self:center}
+.sheet .big{display:flex;align-items:center;gap:12px}
+.sheet .big .ic{width:48px;height:48px;border-radius:14px;display:grid;place-items:center}
+.sheet .big b{font:700 34px/1 var(--ios);font-variant-numeric:tabular-nums}
+.sheet .big small{display:block;color:#a1a1aa;font-size:13px;margin-top:3px}
+.sheet dl{display:grid;grid-template-columns:auto 1fr;gap:8px 12px;margin:0;font-size:14px;background:#1b1b1f;border-radius:14px;padding:12px 14px}
+.sheet dt{color:#9a9aa3}
+.sheet dd{margin:0;text-align:right;font-variant-numeric:tabular-nums}
+.sheet .calc{font-size:13px;color:#e4e4e7;background:rgba(45,198,107,.1);border:1px solid rgba(45,198,107,.4);border-radius:12px;padding:10px 12px}
+.sheet .calc code{font:600 13px var(--ios);color:#7fe3a6}
+.sheet .acts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.sheet .btn{font:700 14px var(--ios);border-radius:14px;padding:12px 8px;text-align:center;cursor:pointer;border:1px solid #44444c;background:transparent;color:#fff}
+.sheet .btn.red{background:var(--red);border-color:var(--red)}
+
+.tabs{display:grid;grid-template-columns:repeat(5,1fr);padding:10px 4px 26px;margin-top:18px;background:rgba(11,11,13,.96);border-top:1px solid #222227}
+.tabs div{display:grid;justify-items:center;gap:4px;font-size:11px;color:#a1a1aa}
+.tabs div.on{color:var(--red-hot)}
+.homebar{position:absolute!important;bottom:8px;left:50%;transform:translateX(-50%);width:120px;height:5px;border-radius:3px;background:#fff;z-index:25!important}
+
+/* ---------- lower sections ---------- */
+.maths{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+@media (max-width:860px){.maths{grid-template-columns:minmax(0,1fr)}}
+.tile{border:1px solid var(--line);border-radius:18px;padding:20px;background:var(--bg-2);display:grid;gap:8px;align-content:start}
+.tile .k{font:600 12px var(--body);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.tile .v{font:italic 700 48px/0.95 var(--display)}
+.tile .v small{font-size:20px;color:var(--muted);font-style:normal;font-weight:600;margin-left:6px}
+.tile p{color:#D4D4D8;font-size:15px}
+.tile code{font:600 14px var(--body);color:#7fe3a6;background:rgba(45,198,107,.08);border-radius:6px;padding:2px 6px}
+.tile.hl{border-color:rgba(224,36,43,.6);background:rgba(224,36,43,.07)}
+.rules{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+@media (max-width:760px){.rules{grid-template-columns:minmax(0,1fr)}}
+.rules div{border:1px solid rgba(245,165,36,.35);background:rgba(245,165,36,.05);border-radius:16px;padding:16px 18px;display:grid;gap:6px;align-content:start}
+.rules b{font-family:var(--display);font-size:20px;font-weight:600}
+.rules span{color:#D4D4D8;font-size:15px}
+.rules em{font-style:normal;color:#ffd08a}
+.phases{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+@media (max-width:860px){.phases{grid-template-columns:minmax(0,1fr)}}
+.phase{border:1px solid var(--line);border-radius:18px;padding:20px;background:var(--bg-2);display:grid;gap:12px;align-content:start}
+.phase .tagline{font-size:14px;color:var(--muted)}
+.phase ul{margin:0;padding-left:18px;display:grid;gap:6px;font-size:15px;color:#D4D4D8}
+.phase .needs{font-size:13.5px;color:var(--dim);border-top:1px solid var(--line);padding-top:10px}
+.phase .needs b{color:var(--muted);font-weight:600}
+.phase h3 .ph{color:var(--red-hot)}
+.two{display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:32px;align-items:start}
+@media (max-width:760px){.two{grid-template-columns:minmax(0,1fr)}}
+.skip{display:grid;gap:14px}
+.skip div{display:grid;gap:4px;padding-bottom:14px;border-bottom:1px solid var(--line)}
+.skip b{font-family:var(--display);font-size:21px;font-weight:600}
+.skip span{color:#D4D4D8;font-size:15.5px;max-width:68ch}
+figure.today{margin:0;display:grid;gap:8px}
+figure.today img{border-radius:22px;border:1px solid var(--line);width:100%;max-width:220px}
+figure.today figcaption{font-size:13px;color:var(--dim)}
+.series{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media (max-width:760px){.series{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:440px){.series{grid-template-columns:minmax(0,1fr)}}
+.series a{display:grid;gap:6px;text-decoration:none;color:var(--fg);border:1px solid var(--line);background:var(--bg-2);border-radius:16px;padding:16px;transition:border-color .2s}
+.series a:hover{border-color:var(--red)}
+.series a.here{border-color:var(--red);background:rgba(224,36,43,.08)}
+.series small{font:600 11.5px var(--body);letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}
+.series b{font:italic 700 26px/1 var(--display);text-transform:uppercase}
+.series span{font-size:13.5px;color:var(--muted)}
+footer{margin-top:64px;padding-top:20px;border-top:1px solid var(--line);font-size:13.5px;color:var(--dim)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><symbol id="i-garage" viewBox="0 0 24 24"><path d="M3 21V9l9-6 9 6v12"/><path d="M7 21v-7h10v7M7 17h10"/></symbol><symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"/></symbol><symbol id="i-phone" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></symbol><symbol id="i-gift" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8s1-5 4.5-5a2.5 2.5 0 0 1 0 5"/></symbol><symbol id="i-edit" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></symbol><symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></symbol><symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></symbol><symbol id="i-doc" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h6"/></symbol><symbol id="i-logout" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></symbol><symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6"/></symbol><symbol id="i-apple-id" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></symbol><symbol id="i-cake" viewBox="0 0 24 24"><path d="M20 21v-8a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8M4 16s.5-1 2-1 2.5 2 4 2 2.5-2 4-2 2.5 2 4 2 2-1 2-1M2 21h20M7 8v3M12 8v3M17 8v3M7 4h.01M12 4h.01M17 4h.01"/></symbol><symbol id="i-message" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></symbol><symbol id="i-nav" viewBox="0 0 24 24"><path d="M3 11 22 2l-9 19-2-8-8-2z"/></symbol><symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol><symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol><symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol><symbol id="i-camera" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></symbol><symbol id="i-wrench" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></symbol><symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol><symbol id="i-spin" viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 1-15.5 6.2M3 12a9 9 0 0 1 15.5-6.2M18.5 2v4h-4M5.5 22v-4h4"/></symbol><symbol id="i-star" viewBox="0 0 24 24"><path d="m12 2 3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/></symbol><symbol id="i-alert" viewBox="0 0 24 24"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></symbol><symbol id="i-chev" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol><symbol id="i-back" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol><symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol><symbol id="i-car" viewBox="0 0 24 24"><path d="M5 17H3v-4l2-5.5A2 2 0 0 1 6.9 6h10.2a2 2 0 0 1 1.9 1.5L21 13v4h-2M9 17h6M3 13h18"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></symbol><symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol><symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></symbol><symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol><symbol id="i-cardb" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h4"/></symbol><symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></symbol></defs></svg>
+
+<div class="wrap">
+<header class="top">
+  <p class="eyebrow">Garage Full Throttle · customer app · design proposal 6</p>
+  <h1>Points history <em>refresh</em></h1>
+  <p class="lede">The same treatment for the Points history screen. Today it shows a balance and two rows: "+500 Appointment APT-000008 $1000" and "+20 Signup bonus". The new version explains where every point came from, shows how close the customer is to the next tier, and lets them tap any row to see the maths. The default view uses the real numbers from your screenshot.</p>
+  <div class="brief">
+    <span class="kept"><b>Kept:</b> 520 pts = +500 (APT-000008, $1,000) + 20 sign-up bonus</span>
+    <span class="kept"><b>Kept:</b> 5 pts per $10 for members, 1 per $100 otherwise</span>
+    <span class="kept"><b>Kept:</b> Tier 2 at 1,000, Tier 3 at 2,750</span>
+  </div>
+</header>
+
+<section id="screen" aria-labelledby="h-scr">
+  <div class="sec-head">
+    <p class="eyebrow">01 · The new Points history</p>
+    <h2 id="h-scr">Every point, explained</h2>
+    <p>Switch between this account (from your screenshot), a busy Tier 2 member and a non-member. Tap any row inside the phone to open its details, and try the filter chips. The red numbers on the phone match the notes on the right.</p>
+  </div>
+  <div class="controls">
+    <div class="ctl"><span>Customer</span>
+      <div class="seg" id="seg-state">
+        <button type="button" id="st-real" data-state="real" aria-pressed="true">This account · 520 pts</button>
+        <button type="button" id="st-busy" data-state="busy" aria-pressed="false">Busy member · Tier 2 (example)</button>
+        <button type="button" id="st-nm" data-state="nm" aria-pressed="false">Not a member (example)</button>
+      </div>
+    </div>
+    <div class="ctl"><span>Background</span>
+      <div class="seg" id="seg-bg">
+        <button type="button" id="bg-carbon" data-bg="carbon" aria-pressed="true">Carbon + tail-light</button>
+        <button type="button" id="bg-glow" data-bg="glow" aria-pressed="false">Glow</button>
+        <button type="button" id="bg-tread" data-bg="tread" aria-pressed="false">Tread</button>
+        <button type="button" id="bg-contour" data-bg="contour" aria-pressed="false">Contour</button>
+        <button type="button" id="bg-streaks" data-bg="streaks" aria-pressed="false">Speed lines</button>
+      </div>
+    </div>
+    <div class="ctl"><span>Markers</span>
+      <div class="seg"><button type="button" id="mk-toggle" aria-pressed="true">Show numbers</button></div>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div class="phone-col">
+      <div class="phone" id="phone">
+        <div class="screen bgfx" id="scr" data-bg="carbon">
+          <div class="sb"><span>9:26</span>
+            <span class="ic" aria-hidden="true">
+              <svg width="18" height="11" viewBox="0 0 18 11"><rect x="0" y="7" width="3" height="4" rx="1" fill="#fff"/><rect x="5" y="5" width="3" height="6" rx="1" fill="#fff"/><rect x="10" y="2.5" width="3" height="8.5" rx="1" fill="#fff"/><rect x="15" y="0" width="3" height="11" rx="1" fill="#fff" opacity=".35"/></svg>
+              <svg width="24" height="12" viewBox="0 0 24 12"><rect x=".5" y=".5" width="20" height="11" rx="3" fill="none" stroke="#fff" opacity=".5"/><rect x="2" y="2" width="10" height="8" rx="1.6" fill="#fff"/><rect x="21.5" y="4" width="1.6" height="4" rx=".8" fill="#fff" opacity=".5"/></svg>
+            </span>
+          </div>
+          <div class="subhead"><span class="icbtn"><svg class="i"><use href="#i-back"/></svg></span><h4>Points history</h4></div>
+          <div class="pad">
+            <!-- 1 hero -->
+            <div class="card hero blk" id="hero">
+              <span class="mk">1</span>
+              <div class="top"><small class="k">GFT points</small><span class="tierb t1" id="h-tier">Tier 1 · 10% off</span></div>
+              <div class="bal"><span class="coin">P</span><b id="h-bal">520</b><span>pts</span></div>
+              <div class="prog">
+                <div class="bar"><i id="h-fill" style="width:52%"></i></div>
+                <div class="ends"><span id="h-from">Tier 1 · 0</span><span id="h-to">Tier 2 · 1,000</span></div>
+                <p id="h-next"><b>480 pts to Tier 2</b> · about $960 more servicing</p>
+              </div>
+              <!-- 2 rate -->
+              <div class="rate blk" id="h-rate"><span class="mk" style="left:-10px;top:-6px">2</span><svg class="i sm"><use href="#i-info"/></svg><span>Members earn <b>5 pts per $10</b> spent on workshop jobs</span></div>
+            </div>
+            <div class="stats">
+              <div><small id="s1l">This year</small><b id="s1">+520</b></div>
+              <div><small>From jobs</small><b id="s2">500</b></div>
+              <div><small>Bonuses</small><b id="s3">20</b></div>
+            </div>
+
+            <!-- 3 filters -->
+            <div class="blk"><span class="mk" style="left:-14px;top:8px">3</span>
+            <div class="chips" id="chips">
+              <button type="button" data-f="all" aria-pressed="true">All</button>
+              <button type="button" data-f="job" aria-pressed="false">Jobs</button>
+              <button type="button" data-f="bonus" aria-pressed="false">Bonuses</button>
+              <button type="button" data-f="tier" aria-pressed="false">Tier changes</button>
+              <button type="button" data-f="adj" aria-pressed="false">Adjustments</button>
+            </div>
+            </div>
+
+            <div id="feed"></div>
+            <p class="tapnote">Tap any entry to see how it was worked out.</p>
+            <p class="foot">Points are worked out on the amount paid after any discount. <a>How points work</a></p>
+          </div>
+          <div class="tabs" aria-hidden="true">
+            <div><svg class="i lg"><use href="#i-home"/></svg>Home</div>
+            <div><svg class="i lg"><use href="#i-cal"/></svg>Appointment</div>
+            <div class="on"><svg class="i lg"><use href="#i-cardb"/></svg>Membership</div>
+            <div><svg class="i lg"><use href="#i-spin"/></svg>Spin</div>
+            <div><svg class="i lg"><use href="#i-user"/></svg>Profile</div>
+          </div>
+          <span class="homebar"></span>
+
+          <!-- 6 detail sheet -->
+          <div class="sheet" id="sheet" hidden>
+            <div class="sh blk">
+              <span class="mk" style="left:12px;top:12px">6</span>
+              <span class="grab"></span>
+              <div class="big"><span class="ic" id="d-ic"></span><div><b id="d-pts">+500 pts</b><small id="d-title">Appointment APT-000008</small></div></div>
+              <dl id="d-dl"></dl>
+              <div class="calc" id="d-calc"></div>
+              <div class="acts" id="d-acts"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li class="note hl"><span class="num">1</span>
+        <h3>Balance with tier and progress <span class="effort e1">Small</span></h3>
+        <p class="from">Replaces: <b>"520 pts" on its own</b></p>
+        <p class="d">The balance, the tier badge and a bar to the next tier, with the gap in points and in dollars. For this account that's 480 points to Tier 2, about $960 more servicing at 5 points per $10. The card colour follows the tier: red for Tier 1, silver for Tier 2.</p>
+      </li>
+      <li class="note"><span class="num">2</span>
+        <h3>The earn rate, stated once, plus three totals <span class="effort e1">Small</span></h3>
+        <p class="from">GFT addition</p>
+        <p class="d">One line that says how points are earned, so "+500 for $1,000" makes sense straight away. Below it: points this year, points from jobs and points from bonuses.</p>
+      </li>
+      <li class="note"><span class="num">3</span>
+        <h3>Filter chips <span class="effort e1">Small</span></h3>
+        <p class="from">GFT addition</p>
+        <p class="d">All, Jobs, Bonuses, Tier changes and Adjustments. Try them on the busy-member example, where the list is long enough to need them.</p>
+        <button type="button" class="see" data-go="busy">Show the busy member</button>
+      </li>
+      <li class="note"><span class="num">4</span>
+        <h3>Grouped by month, with totals <span class="effort e1">Small</span></h3>
+        <p class="from">Replaces: <b>one long list of cards</b></p>
+        <p class="d">"November 2026 · +520" headings make it easy to see what each month added. Rows sit together in one card rather than each in its own box.</p>
+      </li>
+      <li class="note hl"><span class="num">5</span>
+        <h3>Rows in plain words, green for earned <span class="effort e2">Medium</span></h3>
+        <p class="from">Replaces: <b>red "+500", "Appointment APT-000008", "$1000"</b></p>
+        <p class="d">Red usually means money going out, so earned points turn green. Amounts get proper formatting ($1,000.00). Where the appointment has a service and a car, show them ("Logbook service · Ranger") and keep the APT number as a small reference. The busy-member example shows this. This account's row still shows the APT number, because that's all the screenshot gives.</p>
+      </li>
+      <li class="note hl"><span class="num">6</span>
+        <h3>Tap a row to see the maths <span class="effort e2">Medium</span></h3>
+        <p class="from">GFT addition</p>
+        <p class="d">A sheet shows the date, amount paid, rate and the sum: $1,000 ÷ $10 × 5 = 500. It has buttons to open the appointment or the invoice. When customers can check the maths themselves, they stop calling to ask about it.</p>
+      </li>
+      <li class="note"><span class="num">7</span>
+        <h3>Tier milestones in the list <span class="effort e1">Small</span></h3>
+        <p class="from">GFT addition</p>
+        <p class="d">When a job takes the customer over 1,000 or 2,750 points, a silver "Tier 2 unlocked · now 15% off" row appears in the list. It's worth 0 points, but it's the moment worth celebrating.</p>
+      </li>
+      <li class="note"><span class="num">8</span>
+        <h3>Adjustments, clearly marked <span class="effort e1">Small</span></h3>
+        <p class="from">GFT addition (only if the garage ever adjusts points)</p>
+        <p class="d">If points are taken back, for example after a refund, the row shows a minus in red with a plain reason. If the garage never does this, leave the chip and row type out.</p>
+      </li>
+      <li class="note"><span class="num">9</span>
+        <h3>A nudge for non-members <span class="effort e2">Medium</span></h3>
+        <p class="from">GFT addition</p>
+        <p class="d">For a non-member, the same $1,000 job earns 10 points at 1 per $100. Under that row: "As a member, this job would have earned 500 pts", with a Join button. It uses the customer's own history to make the case.</p>
+        <button type="button" class="see" data-go="nm">Show a non-member</button>
+      </li>
+    </ol>
+  </div>
+</section>
+
+<section id="maths" aria-labelledby="h-maths">
+  <div class="sec-head">
+    <p class="eyebrow">02 · The maths, kept exactly</p>
+    <h2 id="h-maths">How this account got to 520</h2>
+    <p>Worked out from the screenshot and the rules on the Membership tab. Nothing here changes your rules.</p>
+  </div>
+  <div class="maths">
+    <div class="tile hl"><span class="k">7 Nov · APT-000008</span><span class="v">+500<small>pts</small></span><p><code>$1,000 ÷ $10 × 5 = 500</code><br>Member rate: 5 points per $10.</p></div>
+    <div class="tile"><span class="k">1 Nov · Sign-up</span><span class="v">+20<small>pts</small></span><p>Sign-up bonus, given once when the account is created.</p></div>
+    <div class="tile"><span class="k">To Tier 2</span><span class="v">480<small>pts</small></span><p><code>1,000 − 520 = 480</code><br>At 5 per $10, that's about $960 of servicing.</p></div>
+  </div>
+  <div class="maths">
+    <div class="tile"><span class="k">Same job, non-member</span><span class="v">+10<small>pts</small></span><p><code>$1,000 ÷ $100 × 1 = 10</code><br>50 times fewer points. This is the nudge in note 9.</p></div>
+    <div class="tile"><span class="k">To Tier 3</span><span class="v">2,230<small>pts</small></span><p><code>2,750 − 520 = 2,230</code><br>About $4,460 more servicing for this account.</p></div>
+    <div class="tile"><span class="k">Rounding</span><span class="v">$10<small>steps</small></span><p>The mockup counts whole $10 blocks ($678 → 335 pts). The garage should confirm how the app rounds.</p></div>
+  </div>
+</section>
+
+<section id="fixes" aria-labelledby="h-fix">
+  <div class="sec-head">
+    <p class="eyebrow">03 · What changes from today</p>
+    <h2 id="h-fix">Problems with the current screen</h2>
+  </div>
+  <div class="two">
+    <div class="skip">
+      <div><b>Earned points are red</b><span>Red reads as money going out. Earned points turn green; red is kept for points taken back (5, 8).</span></div>
+      <div><b>An internal ID as the title</b><span>"Appointment APT-000008" means something to the workshop, not the customer. Lead with the service and car, and keep the ID small (5).</span></div>
+      <div><b>"$1000" with no explanation</b><span>The amount needs formatting ($1,000.00), and the customer needs to see why $1,000 is worth 500 points (2, 6).</span></div>
+      <div><b>A balance with no goal</b><span>"520 pts" doesn't say what it's for. The tier bar does (1).</span></div>
+      <div><b>A refresh button</b><span>Pull to refresh, as on every other screen.</span></div>
+      <div><b>Every row is a separate box</b><span>Fine for two entries, heavy for twenty. One card per month scales better (4).</span></div>
+    </div>
+    <figure class="today">
+      <img src="assets/images/current-points-history.jpg" alt="Current Points history screen: 520 pts, a card with +500 in red for Appointment APT-000008, $1000, 7 Nov 2026, and a card with +20 Signup bonus, 1 Nov 2026.">
+      <figcaption>Points history today.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section id="questions" aria-labelledby="h-q">
+  <div class="sec-head">
+    <p class="eyebrow">04 · Questions for the client</p>
+    <h2 id="h-q">Confirm before building</h2>
+  </div>
+  <div class="rules">
+    <div><b>Before or after the discount?</b><span>Are points worked out on the full price or on what the member actually paid after 10% off? The footer line in the mockup assumes <em>after the discount</em>. Change it if that's wrong.</span></div>
+    <div><b>Does GST count?</b><span>Are points earned on the GST-inclusive total? Most customers will assume the number on their invoice.</span></div>
+    <div><b>Can points go down?</b><span>If a job is refunded or cancelled, are its points taken back? If never, drop the Adjustments chip.</span></div>
+    <div><b>Do points expire?</b><span>If they do, the hero card needs a line such as "120 pts expire on 1 Mar". If not, say <em>"Points never expire"</em> under the balance. It's a selling point.</span></div>
+  </div>
+</section>
+
+<section id="build" aria-labelledby="h-build">
+  <div class="sec-head">
+    <p class="eyebrow">05 · Build order</p>
+    <h2 id="h-build">Ship it in two drops</h2>
+  </div>
+  <div class="phases" style="grid-template-columns:repeat(2,minmax(0,1fr))">
+    <div class="phase">
+      <h3><span class="ph">Phase 1</span> · Display only</h3>
+      <p class="tagline">About 1 week. Uses the data the screen already has.</p>
+      <ul>
+        <li>Tier badge and progress bar (1)</li>
+        <li>Earn-rate line and three totals (2)</li>
+        <li>Month groups, green amounts, $ formatting (4, 5)</li>
+        <li>Detail sheet with the maths (6)</li>
+        <li>Pull to refresh</li>
+      </ul>
+      <p class="needs"><b>Needs:</b> the amount paid and rate on each entry (already there for jobs).</p>
+    </div>
+    <div class="phase">
+      <h3><span class="ph">Phase 2</span> · Richer entries</h3>
+      <p class="tagline">About 1–2 weeks. Light backend work.</p>
+      <ul>
+        <li>Service name and car on job rows (5)</li>
+        <li>Filter chips (3)</li>
+        <li>Tier milestone rows (7)</li>
+        <li>Adjustments, if used (8)</li>
+        <li>Non-member nudge (9)</li>
+      </ul>
+      <p class="needs"><b>Needs:</b> service and vehicle linked to each points entry; an entry type field (job, bonus, tier, adjustment); tier-change events.</p>
+    </div>
+  </div>
+</section>
+
+<section id="series" aria-labelledby="h-series">
+  <div class="sec-head">
+    <p class="eyebrow">06 · The full set</p>
+    <h2 id="h-series">All six proposals</h2>
+  </div>
+  <div class="series">
+    <a href="https://claude.ai/artifact/WijJoatcNDTDr8ABJCLYmA" target="_blank" rel="noopener"><small>1 · Home</small><b>Home</b><span>Points chip, promo carousel, quick actions, backgrounds</span></a>
+    <a href="https://claude.ai/artifact/Ft4WHYjHPB5ALpKhk1kHQS" target="_blank" rel="noopener"><small>2 · Appointment</small><b>Appointments</b><span>Live job card, extra-work approval, booking flow</span></a>
+    <a href="https://claude.ai/artifact/4cLAzaabg32x84HUjvD2Xs" target="_blank" rel="noopener"><small>3 · Membership</small><b>Membership</b><span>Club cards, tier track, join calculator</span></a>
+    <a href="https://claude.ai/artifact/2FSkrfTQh7Pr1FpqV4oVUJ" target="_blank" rel="noopener"><small>4 · Spin</small><b>Spin</b><span>Tyre wheel, prize wallet, rules and odds</span></a>
+    <a href="https://claude.ai/artifact/CfPfjzfed6QSjxFfefRdgA" target="_blank" rel="noopener"><small>5 · Profile</small><b>Profile</b><span>Account, My garage, notifications, contact</span></a>
+    <a class="here" href="#screen"><small>6 · Points history</small><b>Points history</b><span>This page</span></a>
+  </div>
+</section>
+
+<footer>Prepared for Garage Full Throttle. "This account" uses the entries, balance and dates from the current app's screenshot. The busy-member and non-member views are examples. Service names, cars, references and amounts in them are made up.</footer>
+</div>
+
+<script>
+(function(){
+  var scr=document.getElementById('scr'), phone=document.getElementById('phone');
+  var ICON={job:'wrench',bonus:'gift',tier:'star',ref:'user',adj:'edit'};
+  function fmt$(n){return '$'+n.toLocaleString('en-AU',{minimumFractionDigits:2,maximumFractionDigits:2});}
+  function fmt(n){return n.toLocaleString('en-AU');}
+  function memberPts(paid){return Math.floor(paid/10)*5;}
+  function nonPts(paid){return Math.floor(paid/100);}
+
+  var DATA={
+    real:{member:true, tier:1, bal:520, year:'This year',
+      months:[['November 2026',[
+        {t:'job',title:'Appointment',ref:'APT-000008',date:'7 Nov 2026',paid:1000,pts:500},
+        {t:'bonus',title:'Sign-up bonus',date:'1 Nov 2026',pts:20,why:'Given once when the account was created.'}]]]},
+    busy:{member:true, tier:2, bal:1240, year:'This year',
+      months:[
+        ['November 2026',[
+          {t:'tier',title:'Tier 2 unlocked',date:'3 Nov 2026',pts:0,why:'Passed 1,000 points. Now 15% off workshop service and labour.'},
+          {t:'job',title:'Logbook service + brake pads · Ranger',ref:'APT-000031',date:'3 Nov 2026',paid:610.20,pts:305}]],
+        ['October 2026',[
+          {t:'job',title:'4 tyres + alignment · Corolla',ref:'APT-000024',date:'18 Oct 2026',paid:780,pts:390},
+          {t:'adj',title:'Points taken back · refund',ref:'APT-000022',date:'9 Oct 2026',pts:-45,why:'Wiper job refunded, so its 45 points were removed.'}]],
+        ['September 2026',[
+          {t:'ref',title:'Referral bonus · Sam joined',date:'21 Sep 2026',pts:50,why:'A friend you referred finished their first job.',sg:true},
+          {t:'job',title:'Logbook service · Ranger',ref:'APT-000017',date:'4 Sep 2026',paid:389,pts:190}]],
+        ['August 2026',[
+          {t:'job',title:'Battery + alternator · Ranger',ref:'APT-000009',date:'26 Aug 2026',paid:669,pts:330},
+          {t:'bonus',title:'Sign-up bonus',date:'20 Aug 2026',pts:20,why:'Given once when the account was created.'}]]]},
+    nm:{member:false, tier:0, bal:30, year:'This year',
+      months:[['November 2026',[
+        {t:'job',title:'Appointment',ref:'APT-000008',date:'7 Nov 2026',paid:1000,pts:10,nm:true},
+        {t:'bonus',title:'Sign-up bonus',date:'1 Nov 2026',pts:20,why:'Given once when the account was created.'}]]]}
+  };
+  var state='real', filter='all';
+
+  function renderHero(d){
+    var hero=document.getElementById('hero'), tierb=document.getElementById('h-tier');
+    hero.className='card hero blk'+(d.tier===2?' t2':d.tier===0?' nm':'');
+    document.getElementById('h-bal').textContent=fmt(d.bal);
+    var from,to,next,tname;
+    if(d.tier===0){ tierb.className='tierb nm'; tierb.textContent='Not a member';
+      from=0; to=1000; document.getElementById('h-from').textContent='Join · Tier 1'; document.getElementById('h-to').textContent='Tier 2 · 1,000';
+      document.getElementById('h-next').innerHTML='Join GFT Club to start at <b>Tier 1 · 10% off</b>. Your '+d.bal+' pts come with you.';
+      document.getElementById('h-rate').innerHTML='<span class="mk" style="left:-10px;top:-6px">2</span><svg class="i sm"><use href="#i-info"/></svg><span>You earn <b>1 pt per $100</b>. Members earn <b>5 pts per $10</b>.</span>';
+    } else {
+      if(d.tier===1){ from=0; to=1000; tname='Tier 2'; tierb.className='tierb t1'; tierb.textContent='Tier 1 · 10% off';
+        document.getElementById('h-from').textContent='Tier 1 · 0'; document.getElementById('h-to').textContent='Tier 2 · 1,000'; }
+      else { from=1000; to=2750; tname='Tier 3'; tierb.className='tierb t2'; tierb.textContent='Tier 2 · 15% off';
+        document.getElementById('h-from').textContent='Tier 2 · 1,000'; document.getElementById('h-to').textContent='Tier 3 · 2,750'; }
+      var gap=to-d.bal;
+      document.getElementById('h-next').innerHTML='<b>'+fmt(gap)+' pts to '+tname+'</b> · about $'+fmt(gap*2)+' more servicing';
+      document.getElementById('h-rate').innerHTML='<span class="mk" style="left:-10px;top:-6px">2</span><svg class="i sm"><use href="#i-info"/></svg><span>Members earn <b>5 pts per $10</b> spent on workshop jobs</span>';
+    }
+    document.getElementById('h-fill').style.width=Math.max(2,Math.min(100,(d.bal-from)/(to-from)*100))+'%';
+    var all=[].concat.apply([],d.months.map(function(m){return m[1];}));
+    var y=0,j=0,b=0; all.forEach(function(e){ y+=e.pts; if(e.t==='job') j+=e.pts; if(e.t==='bonus'||e.t==='ref') b+=e.pts; });
+    document.getElementById('s1').textContent=(y>=0?'+':'')+fmt(y);
+    document.getElementById('s2').textContent=fmt(j);
+    document.getElementById('s3').textContent=fmt(b);
+  }
+  var flat=[];
+  function renderFeed(d){
+    var h='', idx=0, marked={};
+    flat=[];
+    d.months.forEach(function(m,mi){
+      var items=m[1].filter(function(e){ return filter==='all' || e.t===filter || (filter==='bonus' && e.t==='ref'); });
+      if(!items.length) return;
+      var tot=m[1].reduce(function(s,e){return s+e.pts;},0);
+      h+='<div class="month blk">'+(!marked.m?'<span class="mk" style="left:-12px;top:-14px">4</span>':'')+'<b>'+m[0]+'</b><span>'+(tot>=0?'<em>+'+fmt(tot)+'</em>':'<em style="color:#ff8a8e">'+fmt(tot)+'</em>')+' pts</span></div>';
+      marked.m=1;
+      h+='<div class="list">';
+      items.forEach(function(e){
+        flat.push(e);
+        var cls=e.pts>0?'plus':e.pts<0?'minus':'zero';
+        var sub=e.date;
+        if(e.t==='job') sub=fmt$(e.paid)+' paid · '+e.date.replace(' 2026','');
+        var mk='';
+        if(e.t==='job' && !marked.j){ mk='<span class="mk" style="left:-22px;top:4px">5</span>'; marked.j=1; }
+        if(e.t==='tier' && !marked.t){ mk='<span class="mk" style="left:-8px;top:4px">7</span>'; marked.t=1; }
+        if(e.t==='adj' && !marked.a){ mk='<span class="mk" style="left:-22px;top:4px">8</span>'; marked.a=1; }
+        h+='<button type="button" class="en'+(e.t==='tier'?' mile':'')+'" data-i="'+idx+'">'+mk+'<span class="ic k-'+e.t+'"><svg class="i"><use href="#i-'+ICON[e.t]+'"/></svg></span>'+
+           '<span class="tt"><b>'+e.title+(e.ref?' <span class="ref">'+e.ref+'</span>':'')+'</b><small>'+sub+'</small></span>'+
+           '<span class="pt '+cls+'">'+(e.pts>0?'+':'')+(e.pts===0?'★':fmt(e.pts))+(e.pts!==0?'<small>pts</small>':'<small>milestone</small>')+'</span></button>';
+        if(e.nm){ h+='<div class="upsell blk"><span class="mk" style="left:-8px;top:-8px">9</span><span>As a member, this job would have earned <b>'+fmt(memberPts(e.paid))+' pts</b>.</span><span class="go">Join</span></div>'; }
+        idx++;
+      });
+      h+='</div>';
+    });
+    if(!flat.length) h='<div class="card" style="margin-top:16px;text-align:center;color:#a1a1aa;font-size:13.5px">Nothing here yet.</div>';
+    document.getElementById('feed').innerHTML=h;
+  }
+  function openSheet(e){
+    var dl='', calc='', acts='';
+    document.getElementById('d-ic').className='ic k-'+e.t;
+    document.getElementById('d-ic').innerHTML='<svg class="i lg"><use href="#i-'+ICON[e.t]+'"/></svg>';
+    var pts=document.getElementById('d-pts'); pts.textContent=(e.pts>0?'+':'')+(e.pts===0?'Tier 2':fmt(e.pts)+' pts');
+    pts.style.color=e.pts>0?'#5fe08f':e.pts<0?'#ff8a8e':'#e6e9ee';
+    document.getElementById('d-title').textContent=e.title+(e.ref?' · '+e.ref:'');
+    dl+='<dt>Date</dt><dd>'+e.date+'</dd>';
+    if(e.t==='job'){
+      var mem=!e.nm;
+      dl+='<dt>Amount paid</dt><dd>'+fmt$(e.paid)+'</dd><dt>Rate</dt><dd>'+(mem?'Member · 5 pts per $10':'Non-member · 1 pt per $100')+'</dd><dt>Balance after</dt><dd>'+balAfter(e)+' pts</dd>';
+      calc = mem ? '<code>'+fmt$(e.paid).replace('.00','')+' → '+Math.floor(e.paid/10)+' × $10 × 5 = '+fmt(e.pts)+' pts</code>'
+                 : '<code>'+fmt$(e.paid).replace('.00','')+' → '+Math.floor(e.paid/100)+' × $100 × 1 = '+fmt(e.pts)+' pts</code><br>As a member: '+fmt(memberPts(e.paid))+' pts.';
+      acts='<span class="btn">View appointment</span><span class="btn red">Invoice</span>';
+    } else {
+      dl+='<dt>Type</dt><dd>'+({bonus:'Bonus',ref:'Referral bonus',tier:'Tier change',adj:'Adjustment'})[e.t]+'</dd><dt>Balance after</dt><dd>'+balAfter(e)+' pts</dd>';
+      calc=e.why+(e.sg?' <b style="color:#ffd08a">(Suggested feature)</b>':'');
+      acts='<span class="btn" style="grid-column:1/-1">Close</span>';
+    }
+    document.getElementById('d-dl').innerHTML=dl;
+    var c=document.getElementById('d-calc'); c.innerHTML=calc;
+    c.style.background=e.t==='adj'?'rgba(224,36,43,.1)':''; c.style.borderColor=e.t==='adj'?'rgba(224,36,43,.45)':'';
+    document.getElementById('d-acts').innerHTML=acts;
+    document.getElementById('sheet').hidden=false;
+  }
+  function balAfter(target){
+    var d=DATA[state], all=[].concat.apply([],d.months.map(function(m){return m[1];})).slice().reverse(), run=0;
+    for(var i=0;i<all.length;i++){ run+=all[i].pts; if(all[i]===target) return fmt(run); }
+    return '';
+  }
+  document.getElementById('sheet').addEventListener('click',function(ev){
+    if(ev.target.id==='sheet' || ev.target.classList.contains('btn')) this.hidden=true;
+  });
+  document.getElementById('feed').addEventListener('click',function(ev){
+    var b=ev.target.closest('.en'); if(b) openSheet(flat[+b.dataset.i]);
+  });
+  document.querySelectorAll('#chips button').forEach(function(b){ b.addEventListener('click',function(){
+    filter=b.dataset.f; document.querySelectorAll('#chips button').forEach(function(x){x.setAttribute('aria-pressed',String(x===b));}); renderFeed(DATA[state]); }); });
+
+  function setState(k){
+    state=k; filter='all';
+    document.querySelectorAll('#chips button').forEach(function(x){x.setAttribute('aria-pressed',String(x.dataset.f==='all'));});
+    document.getElementById('sheet').hidden=true;
+    renderHero(DATA[k]); renderFeed(DATA[k]);
+    document.querySelectorAll('#seg-state button').forEach(function(b){ b.setAttribute('aria-pressed',String(b.dataset.state===k)); });
+  }
+  document.querySelectorAll('#seg-state button').forEach(function(b){ b.addEventListener('click',function(){ setState(b.dataset.state); }); });
+  document.querySelectorAll('.see').forEach(function(b){ b.addEventListener('click',function(){ setState(b.dataset.go);
+    var top=phone.getBoundingClientRect().top; if(top<-120||top>window.innerHeight*0.6) phone.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'}); }); });
+  document.querySelectorAll('#seg-bg button').forEach(function(b){ b.addEventListener('click',function(){
+    scr.setAttribute('data-bg',b.dataset.bg); document.querySelectorAll('#seg-bg button').forEach(function(x){ x.setAttribute('aria-pressed',String(x===b)); }); }); });
+  var mk=document.getElementById('mk-toggle');
+  mk.addEventListener('click',function(){ var on=mk.getAttribute('aria-pressed')!=='true'; mk.setAttribute('aria-pressed',String(on)); phone.classList.toggle('nomk',!on); });
+  setState('real');
+})();
+</script>
+
+</body>
+</html>
